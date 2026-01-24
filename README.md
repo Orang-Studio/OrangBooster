@@ -4,7 +4,8 @@
 
 <h1 align="center">orange booster</h1>
 
-
+> [!NOTE]
+> This program will be rewritten. Do not use it now!
 
 
 This Booster is a compilation of Windows tasks I perform on each Windows system I use.           
@@ -26,7 +27,7 @@ irm oranges.lt/get.ps1 | iex
 ``` 
 
 ### Method 2 - Download File (Quicker Way, But Also Safe)
--   Download the file under the code button from [GitHub](https://github.com/adasjusk/Orange-Booster)
+-   Download the file under the code button from [GitHub](https://github.com/Orang-Studio/Orange-Booster)
 -   Run the file named `orangbostr.exe`
 
 ---
@@ -35,7 +36,7 @@ irm oranges.lt/get.ps1 | iex
 If someone wants to update this version then make a issue or pull.
 if you still want that old legacy batch here:
 ```
-irm raw.githubusercontent.com/adasjusk/OrangBooster/legacy/get.ps1 | iex
+irm raw.githubusercontent.com/Orang-Studio/OrangBooster/legacy/get.ps1 | iex
 ```
 
 Thanks For Support <br>
