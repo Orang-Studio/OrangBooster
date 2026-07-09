@@ -4,42 +4,38 @@
 
 <h1 align="center">orange booster</h1>
 
-> [!NOTE]
-> This program will be rewritten. Do not use it now!
 
-
-This Booster is a compilation of Windows tasks I perform on each Windows system I use.           
+This Booster is a list of Windows 11 tasks/tweaks I perform on each Windows system I use.           
 It's for debloating, increasing privacy and enabling some tweaks with this program           
 keep this project clean and efficient.
-Only For Windows 10/11
+Only For Windows 11, sorry use Windows 11 LTSC from [massgravel](https://massgrave.dev/windows_ltsc_links) to have good experiance.
 
-This is official orange booster source by adasjusk the creator of program 
+This is official orangbooster source by adasjusk the creator of program 
 
-![image](https://github.com/user-attachments/assets/5579d550-a0bf-471b-bd20-7c67d9b710ea)
 ---
 
-### Method 1 - PowerShell (Slower, Safer)
+### Method 1 - PowerShell (Safer, Less popups, Kinda slow)
 
 -   Right-click on the Windows start menu and select PowerShell or Terminal (Not CMD).
 -   Copy and paste the code below and press enter  
 ```
-irm oranges.lt/get.ps1 | iex
+irm oranges.lt/run.ps1 | iex
 ``` 
 
-### Method 2 - Download File (Quicker Way, But Also Safe)
+### Method 2 - Download File (Quicker Way, But Annoying Microslop popups)
 -   Download the file under the code button from [GitHub](https://github.com/Orang-Studio/Orange-Booster)
--   Run the file named `orangbostr.exe`
+-   Run the file named `orangbooster.exe`
 
 ---
 
-### Not Method - but a old cli (Old, Unsafe, Deprecated)
-If someone wants to update this version then make a issue or pull.
-if you still want that old legacy batch here:
+### Not Method - but cli (Old way)
+if you still want cli
 ```
-irm raw.githubusercontent.com/Orang-Studio/OrangBooster/legacy/get.ps1 | iex
+irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/hl.ps1 | iex
 ```
 
 Thanks For Support <br>
-Latest Version: 7.0 <br>
-Release date: 2025-07-15
+Thanks For [K0](https://github.com/eliasamurphy) to cover this booster on [Youtube](https://www.youtube.com/watch?v=1uGm6VImF-s)<br>
+Latest Version: 8.0 <br>
+Release date: 2026-07-9
 <p align="center">Made with Love ❤️</p>
