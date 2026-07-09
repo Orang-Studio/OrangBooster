@@ -1,1 +1,0 @@
-pyinstaller --noconfirm --onefile --windowed --icon "C:\ProgramData\InterJava-Programs\orange.ico" --name "orangbostr" --clean --uac-admin  "C:\Users\adasjusk\Desktop\Orangeboost\main.py"
