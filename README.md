@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/86c49168-e509-4183-bd33-a35f9270766f" alt="orange">
 </p>
 
-<h1 align="center">orange booster</h1>
+<h1 align="center">Orangbooster</h1>
 
 
 This Booster is a list of Windows 11 tasks/tweaks I perform on each Windows system I use.           
