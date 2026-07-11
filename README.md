@@ -18,10 +18,13 @@ This is official orangbooster source by adasjusk the creator of program
 
 -   Right-click on the Windows start menu and select PowerShell or Terminal (Not CMD).
 -   Copy and paste the code below and press enter  
-```
+```powershell
 irm oranges.lt/run.ps1 | iex
-``` 
-
+```
+If doesn't work:
+```powershell
+irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/cli.ps1 | iex
+```
 ### Method 2 - Download File (Quicker Way, But Annoying Microslop popups)
 -   Download the file under the code button from [GitHub](https://github.com/Orang-Studio/Orange-Booster)
 -   Run the file named `orangbooster.exe`
@@ -34,8 +37,9 @@ if you still want cli
 irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/cli.ps1 | iex
 ```
 
-Thanks For Support <br>
-Thanks For [K0](https://github.com/eliasamurphy) to cover this booster on [Youtube](https://www.youtube.com/watch?v=1uGm6VImF-s)<br>
+Thanks for support <br>
+Thanks for [K0](https://github.com/eliasamurphy) to cover this booster on [Youtube](https://www.youtube.com/watch?v=1uGm6VImF-s)<br>
+Thanks to [vakarux](https://github.com/vakarux12), [christitustech](https://github.com/ChrisTitusTech), [ralphie](https://github.com/Raphire) for help to make this program!
 Latest Version: 8.0 <br>
-Release date: 2026-07-9
+Release date: 2026-09-11
 <p align="center">Made with Love ❤️</p>
