@@ -31,7 +31,7 @@ irm oranges.lt/run.ps1 | iex
 ### Not Method - but cli (Old way)
 if you still want cli
 ```
-irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/hl.ps1 | iex
+irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/cli.ps1 | iex
 ```
 
 Thanks For Support <br>
