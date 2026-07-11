@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="OrangBooster.csproj">
+    <Platform Project="x86" />
+    <Deploy />
+  </Project>
+</Solution>

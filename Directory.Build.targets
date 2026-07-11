@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <UsingTask TaskName="MergeAppManifests"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <WinAppSDKManifest ParameterType="System.String" Required="true" />
+      <UserManifest ParameterType="System.String" Required="false" />
+      <OutputManifest ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        static XDocument LoadManifest(string path)
+        {
+            var raw = System.IO.File.ReadAllText(path).TrimEnd('\0', '\r', '\n', ' ');
+            return XDocument.Parse(raw);
+        }
+        var sdkDoc = LoadManifest(WinAppSDKManifest);
+        var sdkRoot = sdkDoc.Root;
+        XDocument outDoc;
+        if (!string.IsNullOrEmpty(UserManifest) && System.IO.File.Exists(UserManifest))
+        {
+            outDoc = LoadManifest(UserManifest);
+            var outRoot = outDoc.Root;
+            foreach (var child in sdkRoot.Elements())
+            {
+                var localName = child.Name.LocalName;
+                if (localName == "assemblyIdentity" &&
+                    outRoot.Elements().Any(e => e.Name.LocalName == "assemblyIdentity"))
+                    continue;
+                outRoot.Add(child);
+            }
+        }
+        else
+        {
+            outDoc = sdkDoc;
+            var outRoot = outDoc.Root;
+            if (!outRoot.Elements().Any(e => e.Name.LocalName == "assemblyIdentity"))
+            {
+                var ns = outRoot.Name.Namespace;
+                outRoot.AddFirst(new XElement(ns + "assemblyIdentity",
+                    new XAttribute("name", "WinAppSDK"),
+                    new XAttribute("version", "1.0.0.0"),
+                    new XAttribute("type", "win32")));
+            }
+        }
+        outDoc.Save(OutputManifest);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="CreateWinRTRegistration"
+    BeforeTargets="AssignTargetPaths;CoreCompile"
+    DependsOnTargets="GetNewAppManifestValues;AddMicrosoftWindowsAppSDKPayloadFilesFromComponents"
+    Inputs="$(MSBuildAllProjects);$(UserApplicationManifest);@(MicrosoftWindowsAppSDKAppxFragmentFiles)"
+    Outputs="$(ApplicationManifest)"
+    Condition="'$(MSBuildProjectExtension)' != '.wapproj'">
+    <MakeDir Directories="$(SelfContainedIntermediateOutputPath)Manifests\" />
+    <PropertyGroup>
+      <WindowsAppSDKAppManifest>$(SelfContainedIntermediateOutputPath)Manifests\WindowsAppSDK.manifest</WindowsAppSDKAppManifest>
+      <WindowsAppSDKRedirectDlls>false</WindowsAppSDKRedirectDlls>
+      <WindowsAppSDKRedirectDlls Condition="'$(PublishSingleFile)'=='true'">true</WindowsAppSDKRedirectDlls>
+    </PropertyGroup>
+    <GenerateAppManifestFromAppxFragments
+      RedirectDlls="$(WindowsAppSDKRedirectDlls)"
+      FrameworkDlls="@(MicrosoftWindowsAppSDKDllFiles)"
+      AppxFragments="@(MicrosoftWindowsAppSDKAppxFragmentFiles)"
+      OutAppManifest="$(WindowsAppSDKAppManifest)" />
+    <MergeAppManifests
+      WinAppSDKManifest="$(WindowsAppSDKAppManifest)"
+      UserManifest="$(UserApplicationManifest)"
+      OutputManifest="$(ApplicationManifest)" />
+    <Touch Files="$(ApplicationManifest)" />
+  </Target>
+</Project>

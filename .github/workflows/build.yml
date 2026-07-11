@@ -1,0 +1,65 @@
+name: Build and Release
+
+on:
+  push:
+    branches: main
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - 'LICENSE.*'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Read version from csproj
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$csproj = Get-Content 'OrangBooster.csproj'
+          $version = $csproj.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if (-not $version) { throw "Version not found in OrangBooster.csproj" }
+          Write-Host "Version: $version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Publish single-file exe
+        run: dotnet publish OrangBooster.csproj -c Release -r win-x86 -p:Platform=x86 -p:PublishProfile=win-x86 -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Stage artifacts
+        shell: pwsh
+        run: |
+          $pub = "bin/Release/net8.0-windows10.0.19041.0/win-x86/publish"
+          if (-not (Test-Path "$pub/OrangBooster.exe")) { throw "OrangBooster.exe was not produced" }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item "$pub/OrangBooster.exe" "dist/OrangBooster.exe" -Force
+          $sig = Get-AuthenticodeSignature "dist/OrangBooster.exe"
+          Write-Host "Signature: $($sig.Status)"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrangBooster-win-x86
+          path: |
+            dist/OrangBooster.exe
+
+      - name: Publish release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}.${{ github.run_number }}
+          name: OrangBooster v${{ steps.version.outputs.version }} (build ${{ github.run_number }})
+          make_latest: true
+          files: |
+            dist/OrangBooster.exe
