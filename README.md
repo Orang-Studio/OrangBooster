@@ -23,7 +23,7 @@ irm oranges.lt/run.ps1 | iex
 ```
 If doesn't work:
 ```powershell
-irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/cli.ps1 | iex
+irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/run.ps1 | iex
 ```
 ### Method 2 - Download File (Quicker Way, But Annoying Microslop popups)
 -   Download the file under the code button from [GitHub](https://github.com/Orang-Studio/Orange-Booster)
