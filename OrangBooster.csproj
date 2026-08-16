@@ -4,9 +4,9 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>OrangBooster</RootNamespace>
-    <Version>8.0.0</Version>
-    <AssemblyVersion>8.0.0.0</AssemblyVersion>
-    <FileVersion>8.0.0.0</FileVersion>
+    <Version>8.5.0</Version>
+    <AssemblyVersion>8.5.0.0</AssemblyVersion>
+    <FileVersion>8.5.0.0</FileVersion>
     <Company>OrangStudio</Company>
     <Authors>OrangStudio</Authors>
     <Publisher>OrangStudio</Publisher>

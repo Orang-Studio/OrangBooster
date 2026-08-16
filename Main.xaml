@@ -37,7 +37,7 @@
                 <Border Background="{StaticResource FossBrush}" CornerRadius="4" Padding="6,1">
                     <TextBlock Text="STABLE BUILD" FontSize="10" FontWeight="SemiBold" Foreground="White"/>
                 </Border>
-                <TextBlock Text="v8.0.0" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock Text="v8.5.0" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
         </Grid>
         <NavigationView x:Name="NavView" Grid.Row="1" SelectionChanged="NavView_SelectionChanged" PaneDisplayMode="LeftCompact" IsSettingsVisible="False">
@@ -261,7 +261,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Image x:Name="AboutLogo" Width="64" Height="64"/>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="OrangBooster - v8.0.0" FontSize="16"/>
+                                        <TextBlock Text="OrangBooster - v8.5.0" FontSize="16"/>
                                         <TextBlock Text="Made by adasjusk and vakarux" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         <TextBlock Text="OrangStudio © 2026" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         <TextBlock Text="Thanks for using our programs ❤️" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>

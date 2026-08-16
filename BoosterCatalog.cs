@@ -188,7 +188,7 @@ namespace OrangBooster
                 Description = "Sets POWERSHELL_TELEMETRY_OPTOUT=1 system-wide.",
                 Functions = "• Machine-scope env var written",
                 Tag = CardTag.Safe,
-                WinUtilTweaks = new[] { "WPFTweaksPowershell7Tele" },
+                EmbeddedActions = new[] { "ps7_telemetry_off" },
             };
             yield return new BoosterCard
             {
@@ -294,10 +294,10 @@ namespace OrangBooster
             {
                 Title = "Disable Windows ai slop",
                 Description = "Removes Copilot, disables Recall and Click To Do, hides AI components, and applies the full RemoveWindowsAI policy set (Edge AI, Office Copilot, taskband pins, Copilot key).",
-                Functions = "• Robust embedded Copilot/Recall nuke (appx + provisioned + winget + policies)\n• Full RemoveWindowsAI reg policy pass: WindowsAI/Copilot/Recall, Edge AI, Office Copilot, M365Copilot, taskband pins, Copilot hardware key\n• WPFTweaksWindowsAI\n• Win11Debloat -DisableCopilot -DisableRecall -DisableClickToDo -DisableAISvcAutoStart",
+                Functions = "• Robust embedded Copilot/Recall nuke (appx + provisioned + winget + policies)\n• Full RemoveWindowsAI reg policy pass: WindowsAI/Copilot/Recall, Edge AI, Office Copilot, M365Copilot, taskband pins, Copilot hardware key\n• Paint AI off: Cocreator, Generative Fill/Erase, Image Creator, Remove Background\n• WPFTweaksWindowsAI\n• Win11Debloat -DisableCopilot -DisableRecall -DisableClickToDo -DisableAISvcAutoStart",
                 Tag = CardTag.Unsafe,
                 Recommended = true,
-                EmbeddedActions = new[] { "nuke_ai_copilot", "ai_full_policies" },
+                EmbeddedActions = new[] { "nuke_ai_copilot", "ai_full_policies", "paint_ai_off" },
                 WinUtilTweaks = new[] { "WPFTweaksWindowsAI" },
                 Win11DebloatArgs = new[] { "-DisableCopilot", "-DisableRecall", "-DisableClickToDo", "-DisableAISvcAutoStart" },
             };
@@ -305,10 +305,9 @@ namespace OrangBooster
             {
                 Title = "Remove Xbox & Game Bar",
                 Description = "Fully uninstalls the Xbox app, Game Bar, overlays, DVR and related services.",
-                Functions = "• Remove-AppxPackage GamingApp/XboxApp/overlays/TCUI/IdentityProvider\n• WPFTweaksXboxRemoval\n• Win11Debloat -DisableDVR -DisableGameBarIntegration\n• GamingServices kept (Game Pass)",
+                Functions = "• Remove-AppxPackage GamingApp/XboxApp/overlays/TCUI/IdentityProvider\n• GameDVR AppCaptureEnabled = 0\n• Win11Debloat -DisableDVR -DisableGameBarIntegration\n• GamingServices kept (Game Pass)",
                 Tag = CardTag.Unsafe,
                 Recommended = true,
-                WinUtilTweaks = new[] { "WPFTweaksXboxRemoval" },
                 Win11DebloatArgs = new[] { "-DisableDVR", "-DisableGameBarIntegration" },
                 EmbeddedActions = new[] { "xbox_remove_full" },
             };
@@ -640,5 +639,31 @@ namespace OrangBooster
                 Functions = "• Disable-NetAdapterBinding ms_pacer (QoS Scheduler)\n• ms_msclient (Client for MS Networks)\n• ms_lltdio + ms_rspndr (LLDP mapper)",
                 Tag = CardTag.Unsafe,
                 EmbeddedActions = new[] { "net_bindings_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Remove Paint AI",
+                Description = "Kills the AI features baked into Paint - Cocreator, Generative Fill/Erase, Image Creator and Remove Background.",
+                Functions = "• Policies\\Paint DisableCocreator = 1\n• DisableGenerativeFill = 1\n• DisableImageCreator = 1\n• DisableGenerativeErase = 1\n• DisableRemoveBackground = 1",
+                Tag = CardTag.Privacy,
+                Recommended = true,
+                EmbeddedActions = new[] { "paint_ai_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Disable Device Companion Apps",
+                Description = "Stops Windows from pulling device metadata off the network, which is what triggers the automatic install of vendor companion apps when you plug hardware in.",
+                Functions = "• Device Metadata PreventDeviceMetadataFromNetwork = 1\n• DeviceMetadataServiceURL cleared\n• Applied under both Policies and CurrentVersion",
+                Tag = CardTag.Privacy,
+                Recommended = true,
+                EmbeddedActions = new[] { "device_companion_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Remove preloaded freeware",
+                Description = "VERY DANGEROUS. Scans your installed programs and silently uninstalls OEM/vendor preloads - Lenovo, HP, Dell, Samsung, Acer, MSI, ASUS, LG, Razer plus McAfee/Norton/Avast and bundled consumer apps. Removes MSI, EXE and UWP installs alike. Read the list before running: it will take vendor utilities and drivers like Lenovo Power Management with it.",
+                Functions = "• Enumerate HKLM/HKLM-WOW64/HKCU Uninstall hives\n• Wildcard match against the OrangBooster OEM bloat list\n• MSI products → msiexec /x {GUID} /qn /norestart\n• QuietUninstallString used when present\n• EXE uninstallers → Inno /VERYSILENT, NSIS /S, setup /s /qn detection\n• winget uninstall --silent --force fallback\n• UWP sweep: Remove-AppxPackage -AllUsers + Remove-AppxProvisionedPackage (vendor, Adobe, Journal, Recall, Surface, Candy Crush, TikTok, Netflix, Dropbox…)",
+                Tag = CardTag.Unsafe,
+                EmbeddedActions = new[] { "oem_freeware_remove" },
             };
 }   }   }

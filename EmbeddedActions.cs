@@ -105,6 +105,10 @@ namespace OrangBooster
                     "xbox_remove_full"          => await XboxRemoveFullAsync(ct),
                     "edge_remove_full"          => await EdgeRemoveFullAsync(ct),
                     "ai_full_policies"          => await AiFullPoliciesAsync(ct),
+                    "paint_ai_off"              => await PaintAiOffAsync(ct),
+                    "device_companion_off"      => await DeviceCompanionOffAsync(ct),
+                    "oem_freeware_remove"       => await OemFreewareRemoveAsync(ct),
+                    "ps7_telemetry_off"         => await Ps7TelemetryOffAsync(ct),
                     "gaming_perf_pack"          => await GamingPerfPackAsync(ct),
                     _ => -1,
                 };
@@ -369,7 +373,7 @@ namespace OrangBooster
                 "set_dns_cloudflare", "net_bindings_off", "power_ultimate", "display_max_refresh",
                 "disable_disk_encryption", "disable_ucpd", "uninstall_terminal", "remove_rdp_shortcuts",
                 "bing_websearch_off", "remove_onedrive", "xbox_services_off", "minimize_services",
-                "ai_full_policies", "gaming_perf_pack",
+                "ai_full_policies", "paint_ai_off", "device_companion_off", "gaming_perf_pack",
                 "unpin_store", "clear_start_pins", "clear_taskbar_pins", "remove_capabilities_pack", "disable_features_pack" };
             var failed = new System.Collections.Generic.List<string>();
             foreach (var step in steps)
@@ -1189,10 +1193,23 @@ namespace OrangBooster
                     Get-AppxProvisionedPackage -Online | Where-Object { $_.PackageName -like ""$p*"" } |
                         ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName | Out-Null }
                 }
+                $rk = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR'
+                if (-not (Test-Path $rk)) { New-Item -Path $rk -Force | Out-Null }
+                Set-ItemProperty -Path $rk -Name 'AppCaptureEnabled' -Type DWord -Value 0 -Force
                 Write-Output 'Xbox apps removed (GamingServices left intact for Game Pass)'
                 ";
             return ScriptRunner.RunInlinePowerShellAsync(script, "rm-xbox", ct);
         }
+        static Task<int> Ps7TelemetryOffAsync(CancellationToken ct) => Task.Run(() =>
+        {
+            try
+            {
+                Environment.SetEnvironmentVariable("POWERSHELL_TELEMETRY_OPTOUT", "1", EnvironmentVariableTarget.Machine);
+                Logger.Info("PowerShell 7 telemetry opt-out env var set");
+                return 0;
+            }
+            catch (Exception ex) { Logger.Error("Ps7TelemetryOff", ex); return -1; }
+        }, ct);
 
         static Task<int> EdgeRemoveFullAsync(CancellationToken ct)
         {
@@ -1388,4 +1405,241 @@ Write-Output 'Store unpin (interactive user) done'
             (HKLM, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games", "Scheduling Category", "High"),
             (HKLM, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games", "SFIO Priority", "High")
         ), ct);
+
+        static Task<int> PaintAiOffAsync(CancellationToken ct) => Task.Run(() => Reg(
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint", "DisableCocreator", 1),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint", "DisableGenerativeFill", 1),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint", "DisableImageCreator", 1),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint", "DisableGenerativeErase", 1),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint", "DisableRemoveBackground", 1)
+        ), ct);
+
+        static Task<int> DeviceCompanionOffAsync(CancellationToken ct) => Task.Run(() => Reg(
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\Device Metadata", "PreventDeviceMetadataFromNetwork", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\Device Metadata", "DeviceMetadataServiceURL", ""),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Device Metadata", "PreventDeviceMetadataFromNetwork", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\DeviceInstall\Settings", "DisableSystemRestore", 0)
+        ), ct);
+
+        // Display-name wildcards matched against the installed-programs list (Uninstall registry hives).
+        public static readonly string[] OemFreewarePatterns =
+        {
+            // Lenovo
+            "Lenovo Vantage*", "Lenovo Settings*", "Lenovo System Interface Foundation*", "Lenovo Account Portal*",
+            "Lenovo Service Bridge*", "Lenovo System Update*", "Lenovo Solution Center*", "ThinkVantage*",
+            "Lenovo Hotkey*", "Lenovo Power Management Driver*", "Lenovo Utility*", "Lenovo Nerve Center*",
+            "Lenovo Mouse Suite*", "*ThinkPad Keyboard Suite*", "Lenovo Ultraslim*", "Lenovo Y Keyboard*",
+            "Lenovo Y Gaming*", "Lenovo Le-Note*", "Lenovo Artery*", "Lenovo PiP Anywhere*", "Lenovo Aura*",
+            "ThinkPad Stack*", "Lenovo Family Cloud*", "Lenovo QuickCast*", "Lenovo NFC Connector*",
+            "Lenovo Migration Assistant*", "Lenovo Photo Master*", "Lenovo App Explorer*", "Yoga Picks*",
+            "Lenovo Recommends*", "Lenovo Moto Smart Assistant*", "Lenovo Mobile Assistant*", "Lenovo Bluetooth Lock*",
+            "Lenovo Security Console*", "Lenovo Connect*", "Lenovo Battery Gauge*", "Lenovo Companion*",
+            "ThinkPad Pen*", "Lenovo QuickControl*", "Lenovo ReachIt*", "Lenovo Quick Optimizer*",
+            "ThinkPad Settings Dependency*", "Lenovo ShareIt*", "Lenovo Yoga Camera Man*", "Lenovo Smart Assistant*",
+            "Lenovo WriteIt*", "Lenovo Yoga Phone Companion*", "Lenovo Entertainment Hub*", "Lenovo Endpoint Management*",
+            "Lenovo Rescue and Recovery*", "Lenovo Access Connections*", "Lenovo Communications Manager*",
+            "ThinkPad Power Manager*", "Lenovo Fingerprint*", "Lenovo Password Manager*", "Lenovo AutoLock*",
+            "Lenovo Now*", "Lenovo Welcome*", "Lenovo Smart Meeting*", "Lenovo Quick Clean*", "Lenovo Voice*",
+            // HP
+            "HP Support Assistant*", "OMEN Gaming Hub*", "HP Command Center*", "HP System Event Utility*",
+            "HP QuickDrop*", "HP Audio Center*", "HP Enhanced Lighting*", "HP Pen Control*", "HP Palette*",
+            "HP Display Control*", "HP Smart*", "HP Easy Start*", "HP Easy Scan*", "HP Print and Scan Doctor*",
+            "HP Click*", "HP DesignJet Utility*", "HP ePrint*", "HP Web Jetadmin*", "HP Digital Sending*",
+            "HP Image Assistant*", "HP Manageability*", "HP Client Management*", "HP BIOS Configuration Utility*",
+            "HP SoftPaq*", "HP System Software Manager*", "HP Cloud Endpoint*", "HP Touchpoint Manager*",
+            "HP Wolf Security*", "HP Sure *", "HP Client Security*", "HP Tamper Lock*", "HP Anyware*",
+            "HP Performance Advisor*", "HP AI Studio*", "HP Central Web Console*", "HP Remote Graphics*",
+            "HP JumpStart*", "HP Documentation*", "HP Connection Optimizer*", "HP Notifications*",
+            // Dell / Alienware
+            "Dell SupportAssist*", "Alienware*", "Dell Command*", "Dell Mobile Connect*", "Dell Digital Delivery*",
+            "Dell Optimizer*", "Dell Display Manager*", "Dell Peripheral Manager*", "Dell Power Manager*",
+            "Dell CinemaColor*", "MyDell*", "Dell OpenManage*", "Dell ImageAssist*", "Dell Repository Manager*",
+            "Dell Client Command*", "Dell PowerProtect*", "Dell NetWorker*", "Dell Avamar*", "Dell CloudIQ*",
+            "Dell SRM*", "Dell APEX*", "Dell Trusted Device*", "Dell Data Guardian*", "Dell Encryption*",
+            "Dell Security Management*", "Dell ePSA*", "Dell System E-Support*", "Dell Stage*",
+            "Dell Backup and Recovery*", "Dell Webcam Central*", "Dell QuickSet*", "Dell Customer Connect*",
+            "Dell Update*", "Dell Core Services*",
+            // Samsung
+            "Samsung Notes*", "Samsung Gallery*", "Quick Share*", "Samsung Flow*", "Samsung Account*",
+            "Multi Control*", "Galaxy Book Experience*", "Second Screen*", "Smart Switch*", "Samsung Settings*",
+            "Samsung Update*", "Samsung Device Care*", "Samsung Security*", "Samsung Pass*", "Samsung Recovery*",
+            "Samsung Care*", "Samsung Magician*", "Samsung Data Migration*", "Samsung Portable SSD*",
+            "SmartThings*", "Samsung Studio*", "Samsung Screen Recorder*", "Studio Plus*", "Samsung TV Plus*",
+            "Samsung Pen*", "Screen Cleaner*", "Bixby*", "Galaxy Buds*", "Live Wallpaper*",
+            // Security bloat
+            "McAfee*", "Norton*", "Avast*", "AVG *",
+            // Razer
+            "Razer*",
+            // LG
+            "LG Monitor*", "OnScreen Control*", "LG Switch*", "Dual Controller*", "LG Calibration Studio*",
+            "True Color Pro*", "LG Screen Manager*", "UltraGear Control Center*", "LG Update*",
+            "LG Smart Assistant*", "LG Glance*", "Glance by Mirametrix*", "LG PC Care*", "LG Troubleshooting*",
+            "LG Control Center*", "LG Network Manager*", "LG Power Manager*", "LG ThinQ*", "LG Bridge*",
+            "LG Virtoo*", "LG Mobile*", "LG SuperSign*", "LG ConnectedCare*", "LG LED Assistant*", "Smart Share*",
+            // Acer
+            "PredatorSense*", "NitroSense*", "Acer Care Center*", "Acer Quick Access*", "Acer Purified*",
+            "Acer Jumpstart*", "Acer SpatialLabs*", "SpatialLabs Experience*", "Acer LiveGuard*", "Acer Planet9*",
+            "Planet9*", "Acer BYOC*", "Acer Photo*", "Acer Media*", "Acer Docs*", "Acer Portal*", "abFiles*",
+            "abPhoto*", "Acer Control Center*", "Acer Recovery Management*", "Acer eRecovery*",
+            "Acer Office Manager*", "Acer Deployment Tool*", "Acer Product Registration*",
+            // MSI
+            "MSI Center*", "Dragon Center*", "Creator Center*", "MSI Gaming*", "MSI Dragon*", "MSI Afterburner*",
+            "MSI Kombustor*", "MSI True Color*", "MSI Display Kit*", "Mystic Light*", "MSI Smart Tool*",
+            "Nahimic*", "MSI App Player*", "MSI Sound Tune*", "Killer Control Center*", "MSI LAN Manager*",
+            "MSI Driver Utility*", "MSI BurnRecovery*", "MSI Battery Calibration*", "MSI Help Desk*",
+            // ASUS
+            "Armoury Crate*", "MyASUS*", "ProArt Creator Hub*", "AI Suite*", "ASUS AI Suite*", "Aura Sync*",
+            "GameFirst*", "GameVisual*", "ROG Live Service*", "ROG Armoury*", "Sonic Studio*", "Sonic Radar*",
+            "MacroKey*", "ASUS DisplayWidget*", "DisplayWidget*", "ASUS OLED Care*", "ASUS MultiFrame*",
+            "ASUS Wi-Fi Master*", "ASUS Smart Gesture*", "ASUS USB 3.0 Boost*", "ASUS WebStorage*",
+            "ASUS GiftBox*", "ASUS Product Register*", "ASUS Splendid*", "ASUS ZenLink*",
+            // Third-party consumer bundleware
+            "Dropbox*", "TikTok*", "Instagram*", "Netflix*", "ExpressVPN*", "LastPass*", "Disney+*",
+            "Booking.com*", "Amazon*Assistant*", "WildTangent*", "Keeper Password*",
+        };
+
+        // Package-name / full-name wildcards for the UWP sweep.
+        public static readonly string[] OemFreewareAppx =
+        {
+            "*Lenovo*", "E046963F.*", "*ThinkPad*", "*AppExplorer*",
+            "AD2F1837.*", "*HPInc*", "*HPSupport*", "*OMEN*", "*HPPrinter*",
+            "*Dell*", "*Alienware*", "*SupportAssist*", "PWSDell*",
+            "SAMSUNGELECTRONICSCO*", "*Samsung*", "*SmartThings*", "*QuickShare*", "*GalaxyBook*",
+            "*McAfee*", "*Norton*", "*Avast*", "*AVGTechnologies*",
+            "*Razer*", "*LGElectronics*", "*Acer*", "*MicroStar*", "*MSIGaming*", "*Nahimic*",
+            "*ASUS*", "*ArmouryCrate*", "*ProArt*", "*MyASUS*",
+            "*Dropbox*", "*TikTok*", "*Instagram*", "*Netflix*", "*ExpressVPN*", "*LastPass*",
+            "*Disney*", "*CandyCrush*", "*BubbleWitch*", "*Spotify*",
+            "*AdobeSystemsIncorporated*", "*Adobe*",
+            "Microsoft.MicrosoftJournal", "*MicrosoftJournal*", "*Recall*", "*ClickToDo*",
+            "Microsoft.Surface*", "MicrosoftCorporationII.MicrosoftSurface*", "*SurfaceHub*",
+        };
+
+        static string PsArray(string[] items)
+            => string.Join(",", System.Array.ConvertAll(items, s => "'" + s.Replace("'", "''") + "'"));
+
+        static Task<int> OemFreewareRemoveAsync(CancellationToken ct)
+        {
+            string script =
+                "$ErrorActionPreference='SilentlyContinue'\n" +
+                "$ProgressPreference='SilentlyContinue'\n" +
+                "$patterns = @(" + PsArray(OemFreewarePatterns) + ")\n" +
+                "$appxPatterns = @(" + PsArray(OemFreewareAppx) + ")\n" +
+                OemFreewareBody;
+            return ScriptRunner.RunInlinePowerShellAsync(script, "oem-freeware", TimeSpan.FromMinutes(45), ct);
+        }
+
+        const string OemFreewareBody = @"
+$skip = @('*Driver Package*','*Realtek High Definition Audio Driver*','*Intel(R) Chipset*','*NVIDIA*','*Microsoft Visual C++*','*Windows Driver*')
+
+function Test-Pattern([string]$name, [string[]]$pats) {
+    if ([string]::IsNullOrWhiteSpace($name)) { return $false }
+    foreach ($p in $pats) { if ($name -like $p) { return $true } }
+    return $false
+}
+
+function Invoke-Silent([string]$exe, [string]$arguments) {
+    try {
+        Write-Host ""    exec: $exe $arguments""
+        $proc = if ([string]::IsNullOrWhiteSpace($arguments)) {
+            Start-Process -FilePath $exe -PassThru -WindowStyle Hidden
+        } else {
+            Start-Process -FilePath $exe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+        }
+        if ($null -eq $proc) { return $false }
+        if (-not $proc.WaitForExit(600000)) { try { $proc.Kill() } catch { }; Write-Host '    timed out'; return $false }
+        Write-Host ""    exit code: $($proc.ExitCode)""
+        return ($proc.ExitCode -eq 0 -or $proc.ExitCode -eq 3010 -or $proc.ExitCode -eq 1605 -or $proc.ExitCode -eq 1641)
+    } catch { Write-Host ""    failed: $($_.Exception.Message)""; return $false }
+}
+
+function Split-UninstallString([string]$s) {
+    $s = $s.Trim()
+    if ($s.StartsWith('""')) {
+        $end = $s.IndexOf('""', 1)
+        if ($end -gt 0) { return @($s.Substring(1, $end - 1), $s.Substring($end + 1).Trim()) }
+    }
+    $m = [regex]::Match($s, '^(.*?\.exe)\s*(.*)$', 'IgnoreCase')
+    if ($m.Success) { return @($m.Groups[1].Value.Trim('""'), $m.Groups[2].Value.Trim()) }
+    return @($s, '')
+}
+
+function Get-SilentArgs([string]$exe, [string]$existing) {
+    $leaf = [System.IO.Path]::GetFileName($exe)
+    if ($existing -match '(/|-)(S|s)ilent|/qn|/VERYSILENT|/S\b') { return $existing }
+    if ($leaf -match '^unins') { return (($existing + ' /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-').Trim()) }
+    if ($leaf -match '^setup') { return (($existing + ' /s /S /qn /norestart').Trim()) }
+    return (($existing + ' /S').Trim())
+}
+
+$roots = @(
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
+    'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*'
+)
+
+$entries = @()
+foreach ($r in $roots) { $entries += Get-ItemProperty -Path $r -ErrorAction SilentlyContinue }
+Write-Output (""Scanning "" + $entries.Count + "" installed programs against "" + $patterns.Count + "" bloat patterns"")
+
+$targets = $entries | Where-Object {
+    $_.DisplayName -and (Test-Pattern $_.DisplayName $patterns) -and -not (Test-Pattern $_.DisplayName $skip) -and -not $_.SystemComponent
+} | Sort-Object DisplayName -Unique
+
+if ($targets.Count -eq 0) { Write-Output 'No preloaded freeware matched on this machine' }
+
+foreach ($t in $targets) {
+    $name = $t.DisplayName
+    Write-Output ""Removing: $name""
+    $done = $false
+    $code = $t.PSChildName
+    $ustr = $t.UninstallString
+    $qstr = $t.QuietUninstallString
+
+    $guid = $null
+    if ($code -match '^\{[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}\}$') { $guid = $code }
+    elseif ($ustr -and $ustr -match '(\{[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}\})') { $guid = $Matches[1] }
+
+    if ($guid) {
+        Write-Output '    type: MSI'
+        $done = Invoke-Silent 'msiexec.exe' ""/x $guid /qn /norestart""
+    }
+    if (-not $done -and $qstr) {
+        Write-Output '    type: quiet uninstall string'
+        $parts = Split-UninstallString $qstr
+        $done = Invoke-Silent $parts[0] $parts[1]
+    }
+    if (-not $done -and $ustr) {
+        Write-Output '    type: exe uninstaller'
+        $parts = Split-UninstallString $ustr
+        if (Test-Path -LiteralPath $parts[0]) {
+            $done = Invoke-Silent $parts[0] (Get-SilentArgs $parts[0] $parts[1])
+        }
+    }
+    if (-not $done -and (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Output '    type: winget fallback'
+        try {
+            & winget uninstall --name ""$name"" --silent --force --accept-source-agreements --disable-interactivity 2>&1 | Out-Null
+            $done = ($LASTEXITCODE -eq 0)
+        } catch { }
+    }
+    if ($done) { Write-Output ""    done: $name"" } else { Write-Output ""    could not silently remove: $name"" }
+}
+
+Write-Output 'Sweeping OEM / vendor UWP packages'
+$installed = Get-AppxPackage -AllUsers
+$prov = Get-AppxProvisionedPackage -Online
+foreach ($p in $appxPatterns) {
+    $hits = $installed | Where-Object { $_.Name -like $p -or $_.PackageFullName -like $p }
+    foreach ($h in $hits) {
+        Write-Output ""    appx: $($h.Name)""
+        Remove-AppxPackage -Package $h.PackageFullName -AllUsers -ErrorAction SilentlyContinue
+    }
+    $prov | Where-Object { $_.DisplayName -like $p -or $_.PackageName -like $p } | ForEach-Object {
+        Write-Output ""    provisioned: $($_.DisplayName)""
+        Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -AllUsers -ErrorAction SilentlyContinue | Out-Null
+    }
+}
+Write-Output 'Preloaded freeware removal complete'
+";
 }   }
