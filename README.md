@@ -36,10 +36,10 @@ if you still want cli
 ```
 irm raw.githubusercontent.com/Orang-Studio/OrangBooster/main/cli.ps1 | iex
 ```
-
-Thanks for support <br>
-Thanks for [K0](https://github.com/eliasamurphy) to cover this booster on [Youtube](https://www.youtube.com/watch?v=1uGm6VImF-s)<br>
-Thanks to [vakarux](https://github.com/vakarux12), [christitustech](https://github.com/ChrisTitusTech), [ralphie](https://github.com/Raphire) for help to make this program!
-Latest Version: 8.5 <br>
-Release date: 2026-09-11
-<p align="center">Made with Love ❤️</p>
+# Info 
+- Thanks for support <br>
+- Thanks for [K0](https://github.com/eliasamurphy) to cover this booster on [Youtube](https://www.youtube.com/watch?v=1uGm6VImF-s)<br>
+- Thanks to [vakarux](https://github.com/vakarux12), [christitustech](https://github.com/ChrisTitusTech), [ralphie](https://github.com/Raphire) for help to make this program!
+- Latest Version: 8.5 <br>
+- Release date: 2026-09-11
+- Made by human with Love 🧡
