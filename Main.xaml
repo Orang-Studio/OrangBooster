@@ -37,7 +37,7 @@
                 <Border Background="{StaticResource FossBrush}" CornerRadius="4" Padding="6,1">
                     <TextBlock Text="STABLE BUILD" FontSize="10" FontWeight="SemiBold" Foreground="White"/>
                 </Border>
-                <TextBlock Text="v8.5.0" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock Text="v9.0.0" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
         </Grid>
         <NavigationView x:Name="NavView" Grid.Row="1" SelectionChanged="NavView_SelectionChanged" PaneDisplayMode="LeftCompact" IsSettingsVisible="False">
@@ -147,7 +147,7 @@
                             <Border Style="{StaticResource ActionCardStyle}">
                                 <StackPanel Spacing="4">
                                     <CheckBox x:Name="DebloatCtt" Content="CTT WinUtil tweak pack" FontWeight="SemiBold" IsChecked="True"/>
-                                    <TextBlock Text="Runs the default WinUtil tweak set (telemetry, services, debloat, dark mode, classic menu, Xbox removal, AI off, etc.)." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="32,0,0,0"/>
+                                    <TextBlock Text="Runs the default WinUtil tweak set (telemetry, services, OneDrive/Edge removal, dark mode, classic menu, AI off, etc.)." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="32,0,0,0"/>
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource ActionCardStyle}">
@@ -163,6 +163,38 @@
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource ActionCardStyle}">
+                                <StackPanel Spacing="8">
+                                    <CheckBox x:Name="DebloatAppxSelected" Content="Selective AppX remover (WinUtil list)" FontWeight="SemiBold" IsChecked="False"/>
+                                    <TextBlock Text="Tick individual packages below, then run. Same per-package + provisioned removal WinUtil uses." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="32,0,0,0"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="32,0,0,0">
+                                        <Button Content="Select all" Click="AppxSelectAll_Click" Padding="12,4"/>
+                                        <Button Content="Select none" Click="AppxSelectNone_Click" Padding="12,4"/>
+                                    </StackPanel>
+                                    <ItemsRepeater ItemsSource="{x:Bind FilteredAppx, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <UniformGridLayout MinItemWidth="340" MinItemHeight="64" MinRowSpacing="8" MinColumnSpacing="8" ItemsStretch="Fill"/>
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="local:AppxItem">
+                                                <Border Style="{StaticResource ActionCardStyle}" Padding="10" Margin="32,0,0,0">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <CheckBox Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" MinWidth="0" IsChecked="{x:Bind Selected, Mode=TwoWay}"/>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="13"/>
+                                                            <TextBlock Text="{x:Bind Category}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource ActionCardStyle}">
                                 <StackPanel Spacing="4">
                                     <CheckBox x:Name="DebloatEdge" Content="Edge remover (AveYo)" FontWeight="SemiBold" IsChecked="True"/>
                                     <TextBlock Text="Runs the bundled edge.bat to remove Edge (WebView2 kept)." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="32,0,0,0"/>
@@ -172,6 +204,12 @@
                                 <StackPanel Spacing="4">
                                     <CheckBox x:Name="DebloatOb" Content="OrangBooster registry pack" FontWeight="SemiBold" IsChecked="True"/>
                                     <TextBlock Text="adasjusk's registry config: long paths, verbose BSoD, hide Task View, taskbar left, hidden file ext, Microsoft account removal, Settings home page removal, etc." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="32,0,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource ActionCardStyle}">
+                                <StackPanel Spacing="4">
+                                    <CheckBox x:Name="DebloatGdid" Content="Microsoft GDID removal (degdid)" FontWeight="SemiBold" IsChecked="False"/>
+                                    <TextBlock Text="Silent bundled degdid.ps1 -Protect: wipes the local Microsoft identity state and blocks re-registration. Breaks MSA sign-in (Store, Xbox, OneDrive sync) until unblocked." TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="32,0,0,0"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -261,7 +299,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Image x:Name="AboutLogo" Width="64" Height="64"/>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="OrangBooster - v8.5.0" FontSize="16"/>
+                                        <TextBlock Text="OrangBooster - v9.0.0" FontSize="16"/>
                                         <TextBlock Text="Made by adasjusk and vakarux" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         <TextBlock Text="OrangStudio © 2026" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         <TextBlock Text="Thanks for using our programs ❤️" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
@@ -273,5 +311,8 @@
                 </Grid>
             </Grid>
         </NavigationView>
+        <Grid x:Name="IntroOverlay" Grid.RowSpan="2" Background="Black" Tapped="IntroOverlay_Tapped">
+            <MediaPlayerElement x:Name="IntroPlayer" Background="Black" Stretch="Uniform" AreTransportControlsEnabled="False"/>
+        </Grid>
     </Grid>
 </Window>

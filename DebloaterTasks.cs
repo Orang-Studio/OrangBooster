@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace OrangBooster
 {
-    public enum DebloaterId { CttTasks, RaphiDebloat, AppUninstaller, EdgeRemover, OrangBoosterTasks }
+    public enum DebloaterId { CttTasks, RaphiDebloat, AppUninstaller, AppxSelected, EdgeRemover, OrangBoosterTasks, GdidRemoval }
 
     public static class DebloaterTasks
     {
@@ -12,30 +12,28 @@ namespace OrangBooster
             "WPFTweaksActivity", "WPFTweaksTelemetry", "WPFTweaksLocation",
             "WPFTweaksDisableBGapps", "WPFTweaksConsumerFeatures", "WPFTweaksDisableNotifications",
             "WPFTweaksWPBT",
-            "WPFTweaksDeBloat", "WPFTweaksServices", "WPFTweaksDisableStoreSearch",
+            "WPFTweaksServices", "WPFTweaksDisableStoreSearch",
             "WPFTweaksRemoveOneDrive", "WPFTweaksRemoveEdge",
-            "WPFTweaksWidget", "WPFTweaksXboxRemoval", "WPFTweaksWindowsAI",
+            "WPFTweaksWidget", "WPFTweaksWindowsAI",
             "WPFTweaksDisableExplorerAutoDiscovery", "WPFTweaksRevertStartMenu",
-            "WPFTweaksRightClickMenu", "WPFTweaksRemoveHome",
+            "WPFTweaksRightClickMenu", "WPFTweaksRemoveHomeAndGallery",
             "WPFTweaksEndTaskOnTaskbar", "WPFTweaksDisplay",
             "WPFTweaksHiber", "WPFTweaksEdgeDebloat",
-            "WPFToggleDarkMode", "WPFToggleShowExt", "WPFToggleTaskbarAlignment",
-            "WPFToggleStartMenuRecommendations",
-            "WPFToggleHideSettingsHome", "WPFToggleStickyKeys",
-            "WPFToggleBingSearch", "WPFToggleNewOutlook",
-            "WPFToggleMouseAcceleration",
+            "WPFTweaksPreventDeviceMetadataFromNetwork", "WPFTweaksLogiBlock",
+            "WPFTweaksDeliveryOptimization",
+            "WPFToggleDarkMode", "WPFToggleShowExt", "WPFToggleStickyKeys",
         };
 
         public static readonly string[] DefaultWin11DebloatArgs =
         {
             "-Silent",
-            "-RemoveApps", "-RemoveGamingApps", "-RemoveCommApps", "-RemoveW11Outlook",
+            "-RemoveApps", "-RemoveGamingApps",
             "-DisableTelemetry", "-DisableSuggestions", "-DisableLockscreenTips",
             "-DisableDesktopSpotlight", "-DisableSettings365Ads", "-DisableSettingsHome",
-            "-DisableSearchHistory", "-DisableSearchHighlights", "-DisableStoreSearchSuggestions",
+            "-DisableStoreSearchSuggestions",
             "-DisableEdgeAds",
             "-DisableBing", "-DisableCopilot", "-DisableRecall", "-DisableClickToDo",
-            "-DisableAISvcAutoStart", "-DisableEdgeAI", "-DisablePaintAI", "-DisableNotepadAI",
+            "-DisableAISvcAutoStart", "-DisableEdgeAI", "-DisableChromeAI", "-DisablePaintAI", "-DisableNotepadAI",
             "-TaskbarAlignLeft", "-HideSearchTb", "-HideTaskview", "-HideChat",
             "-DisableWidgets", "-ClearStartAllUsers", "-DisableStartRecommended",
             "-EnableEndTask", "-EnableLastActiveClick",
@@ -58,8 +56,10 @@ namespace OrangBooster
                     DebloaterId.CttTasks         => await ScriptRunner.RunWinUtilTweaksAsync(DefaultWinUtilTweaks, ct),
                     DebloaterId.RaphiDebloat     => await ScriptRunner.RunWin11DebloatArgsAsync(DefaultWin11DebloatArgs, ct),
                     DebloaterId.AppUninstaller   => await EmbeddedActions.RunAsync("appx_bloat_remove", ct),
+                    DebloaterId.AppxSelected     => await EmbeddedActions.RunAppxSelectedAsync(AppxCatalog.SelectedIds(), ct),
                     DebloaterId.EdgeRemover      => await EmbeddedActions.RunAsync("edge_remover_bat", ct),
                     DebloaterId.OrangBoosterTasks => await EmbeddedActions.RunAsync("ob_full_pack", ct),
+                    DebloaterId.GdidRemoval      => await EmbeddedActions.RunAsync("degdid_protect", ct),
                     _ => -1,
                 };
             }

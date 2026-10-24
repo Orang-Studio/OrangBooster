@@ -24,7 +24,9 @@ namespace OrangBooster
             new Item { Label = "Chris Titus winutil tweaks",  Desc = "Community winutil privacy/perf tweak pass",  Run = ct => DebloaterTasks.RunAsync(DebloaterId.CttTasks, ct) },
             new Item { Label = "Win11Debloat (Raphire) pass",  Desc = "Raphire Win11Debloat silent pass",           Run = ct => DebloaterTasks.RunAsync(DebloaterId.RaphiDebloat, ct) },
             new Item { Label = "Remove bloatware apps",        Desc = "Strip preinstalled bloat appx packages",      Run = ct => DebloaterTasks.RunAsync(DebloaterId.AppUninstaller, ct) },
+            new Item { Label = "Remove selected AppX",         Desc = "Remove UI-selected AppX packages",            Run = ct => DebloaterTasks.RunAsync(DebloaterId.AppxSelected, ct) },
             new Item { Label = "Remove Microsoft Edge",        Desc = "Uninstall Microsoft Edge",                    Run = ct => DebloaterTasks.RunAsync(DebloaterId.EdgeRemover, ct) },
+            new Item { Label = "Remove Microsoft GDID",        Desc = "degdid identity wipe + registration block", Run = ct => DebloaterTasks.RunAsync(DebloaterId.GdidRemoval, ct) },
             new Item { Label = "OrangBooster tasks pack",      Desc = "Privacy, services, pins, AI/Copilot, etc.",   Run = ct => DebloaterTasks.RunAsync(DebloaterId.OrangBoosterTasks, ct) },
             new Item { Label = "Clean temp files & caches",    Desc = "Wipe temp folders + restart Explorer",        Run = ct => EmbeddedActions.RunAsync("clean_temp_caches", ct) },
         };

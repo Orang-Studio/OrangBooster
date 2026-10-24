@@ -79,6 +79,14 @@ namespace OrangBooster
             };
             yield return new BoosterCard
             {
+                Title = "Skip Lock Screen",
+                Description = "Goes straight to the sign-in screen on boot and wake.",
+                Functions = "• NoLockScreen policy = 1\n• WPFToggleDisableLockscreen",
+                Tag = CardTag.Safe,
+                WinUtilTweaks = new[] { "WPFToggleDisableLockscreen" },
+            };
+            yield return new BoosterCard
+            {
                 Title = "Remove Microsoft Account Nags",
                 Description = "Kills the 'Back up your PC to Microsoft account' toast, the account ads in Explorer and Start, the 'finish setting up' prompts, and the Account protection nag in Windows Security.",
                 Functions = "• ShowSyncProviderNotifications = 0\n• Start_AccountNotifications = 0\n• ScoobeSystemSettingEnabled = 0\n• ContentDeliveryManager suggestions off\n• Defender Account protection UILockdown = 1",
@@ -192,11 +200,11 @@ namespace OrangBooster
             };
             yield return new BoosterCard
             {
-                Title = "Block Razer Auto Install",
-                Description = "Prevents Windows from auto-installing Razer Synapse bloat on connect.",
-                Functions = "• Driver search order tightened\n• Razer installer folder locked",
+                Title = "Block Razer & Logitech Auto Install",
+                Description = "Prevents Windows from auto-installing Razer Synapse bloat and the Logi Download Assistant on connect.",
+                Functions = "• Driver search order tightened\n• Razer installer folder locked\n• LogiDownloadAssistant folder locked",
                 Tag = CardTag.Safe,
-                WinUtilTweaks = new[] { "WPFTweaksRazerBlock" },
+                WinUtilTweaks = new[] { "WPFTweaksRazerBlock", "WPFTweaksLogiBlock" },
             };
             yield return new BoosterCard
             {
@@ -222,7 +230,7 @@ namespace OrangBooster
                 Description = "Disables FSO globally for fewer compositor stalls in games.",
                 Functions = "• GameDVR_DXGIHonorFSEWindowsCompatible = 1",
                 Tag = CardTag.Safe,
-                WinUtilTweaks = new[] { "WPFTweaksDisableFSO" },
+                EmbeddedActions = new[] { "disable_fso" },
             };
             yield return new BoosterCard
             {
@@ -294,22 +302,22 @@ namespace OrangBooster
             {
                 Title = "Disable Windows ai slop",
                 Description = "Removes Copilot, disables Recall and Click To Do, hides AI components, and applies the full RemoveWindowsAI policy set (Edge AI, Office Copilot, taskband pins, Copilot key).",
-                Functions = "• Robust embedded Copilot/Recall nuke (appx + provisioned + winget + policies)\n• Full RemoveWindowsAI reg policy pass: WindowsAI/Copilot/Recall, Edge AI, Office Copilot, M365Copilot, taskband pins, Copilot hardware key\n• Paint AI off: Cocreator, Generative Fill/Erase, Image Creator, Remove Background\n• WPFTweaksWindowsAI\n• Win11Debloat -DisableCopilot -DisableRecall -DisableClickToDo -DisableAISvcAutoStart",
+                Functions = "• Robust embedded Copilot/Recall nuke (appx + provisioned + winget + policies)\n• TI exploit strip: Deprovisioned + NonRemovable 0 + Inbox + EndOfLife removal of AI appx (AIX, CoreAI, Copilot, OfficeHub, ActionsServer, WritingAssistant, WindowsWorkload, voice/speech packs)\n• CBS hidden AI packages removed + Recall feature payload removed\n• AI files nuked: package folders, ML dlls, Edge installers, Office AI, Recall screenshots, AI URI handlers\n• UWP AI off: Photos flags, App Actions per app, Snipping NPU, Spotlight Ask Copilot\n• Voice Clarity driver removed + reinstall blocked, Defender AI off, reinstall-block package installed\n• Paint AI off: Cocreator, Generative Fill/Erase, Image Creator, Remove Background\n• Full RemoveWindowsAI reg policy pass: WindowsAI/Copilot/Recall, Edge AI, Office Copilot + training/content-safety, AI consent stores, background access, Paint experiment opt-outs\n• Deep clean: Recall/Office tasks off, AI event channels off, region Copilot policies off, Edge Copilot lab flags off\n• WPFTweaksWindowsAI\n• Win11Debloat -DisableCopilot -DisableRecall -DisableClickToDo -DisableAISvcAutoStart -DisableChromeAI",
                 Tag = CardTag.Unsafe,
                 Recommended = true,
-                EmbeddedActions = new[] { "nuke_ai_copilot", "ai_full_policies", "paint_ai_off" },
+                EmbeddedActions = new[] { "nuke_ai_copilot", "ai_full_policies", "ai_deep_clean", "ai_ti_strip", "ai_cbs_strip", "ai_files_nuke", "ai_uwp_settings", "ai_voice_off", "ai_reinstall_block", "paint_ai_off" },
                 WinUtilTweaks = new[] { "WPFTweaksWindowsAI" },
-                Win11DebloatArgs = new[] { "-DisableCopilot", "-DisableRecall", "-DisableClickToDo", "-DisableAISvcAutoStart" },
+                Win11DebloatArgs = new[] { "-DisableCopilot", "-DisableRecall", "-DisableClickToDo", "-DisableAISvcAutoStart", "-DisableChromeAI" },
             };
             yield return new BoosterCard
             {
                 Title = "Remove Xbox & Game Bar",
                 Description = "Fully uninstalls the Xbox app, Game Bar, overlays, DVR and related services.",
-                Functions = "• Remove-AppxPackage GamingApp/XboxApp/overlays/TCUI/IdentityProvider\n• GameDVR AppCaptureEnabled = 0\n• Win11Debloat -DisableDVR -DisableGameBarIntegration\n• GamingServices kept (Game Pass)",
+                Functions = "• Remove-AppxPackage GamingApp/XboxApp/overlays/TCUI/IdentityProvider/CallableUI (+provisioned)\n• GameDVR AppCaptureEnabled = 0 + Game Bar off + Xbox services disabled\n• Win11Debloat -DisableDVR -DisableGameBarIntegration\n• GamingServices kept (Game Pass)",
                 Tag = CardTag.Unsafe,
                 Recommended = true,
                 Win11DebloatArgs = new[] { "-DisableDVR", "-DisableGameBarIntegration" },
-                EmbeddedActions = new[] { "xbox_remove_full" },
+                EmbeddedActions = new[] { "xbox_remove_full", "gamebar_off", "xbox_services_off" },
             };
             yield return new BoosterCard
             {
@@ -389,6 +397,16 @@ namespace OrangBooster
             };
             yield return new BoosterCard
             {
+                Title = "Remove Start Recommended",
+                Description = "Hides the Recommended section in both the old and the new 26H2 Start menu.",
+                Functions = "• HideRecommendedSection = 1 (HKCU + HKLM policy + PolicyManager)\n• IsEducationEnvironment = 1 (also turns off lock screen Spotlight)\n• Start_IrisRecommendations = 0, Start_TrackDocs = 0\n• Win11Debloat -DisableStartRecommended",
+                Tag = CardTag.Customizable,
+                Recommended = true,
+                Win11DebloatArgs = new[] { "-DisableStartRecommended" },
+                EmbeddedActions = new[] { "start_recommended_off" },
+            };
+            yield return new BoosterCard
+            {
                 Title = "Disable Explorer Auto Folder Discovery",
                 Description = "Stops Explorer from guessing folder types (slow browsing).",
                 Functions = "• Flush Bags + BagMRU\n• AllFolders FolderType = NotSpecified",
@@ -437,7 +455,39 @@ namespace OrangBooster
                 Functions = "• MouseSpeed = 0\n• MouseThreshold1/2 = 0",
                 Tag = CardTag.Customizable,
                 Recommended = true,
-                WinUtilTweaks = new[] { "WPFToggleMouseAcceleration" },
+                EmbeddedActions = new[] { "mouse_accel_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Disable Transparency",
+                Description = "Turns off acrylic and mica transparency effects. Runs after Dark Mode, which turns them on.",
+                Functions = "• EnableTransparency = 0",
+                Tag = CardTag.Customizable,
+                EmbeddedActions = new[] { "transparency_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Disable Search Indexing",
+                Description = "Stops the Windows Search indexer. Start menu search still finds apps and settings, file search gets slower.",
+                Functions = "• WSearch service stopped\n• WSearch startup = Disabled",
+                Tag = CardTag.Customizable,
+                EmbeddedActions = new[] { "search_indexing_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Disable All Startup Apps",
+                Description = "Turns off every app that starts with Windows, same as switching them all off in Task Manager. Windows Security is kept.",
+                Functions = "• StartupApproved Run / Run32 / StartupFolder = disabled for each entry\n• HKCU + HKLM + Startup folders\n• Re-enable any app in Task Manager > Startup apps",
+                Tag = CardTag.Customizable,
+                EmbeddedActions = new[] { "startup_apps_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Digital Markets Act Mode",
+                Description = "Makes Windows re-detect the device region from your Country or region so the EU Digital Markets Act rules apply: Edge uninstallable, web search can be turned off, Copilot off. Restart required.",
+                Functions = "• Country or region kept if in the EEA, otherwise set to Ireland\n• DeviceRegion value deleted (TrustedInstaller if admin is refused)\n• Windows recreates DeviceRegion from Country or region at next restart",
+                Tag = CardTag.Unsafe,
+                EmbeddedActions = new[] { "dma_region_eea" },
             };
             yield return new BoosterCard
             {
@@ -446,7 +496,7 @@ namespace OrangBooster
                 Functions = "• TaskbarAl = 0\n• Restart explorer",
                 Tag = CardTag.Customizable,
                 Recommended = true,
-                WinUtilTweaks = new[] { "WPFToggleTaskbarAlignment" },
+                Win11DebloatArgs = new[] { "-TaskbarAlignLeft" },
             };
             yield return new BoosterCard
             {
@@ -505,6 +555,14 @@ namespace OrangBooster
                 Tag = CardTag.Safe,
                 Recommended = true,
                 EmbeddedActions = new[] { "enable_game_mode" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Optimize NVIDIA Settings",
+                Description = "Imports the Sparkle NVIDIA profile into the global driver profile. Skipped on PCs without an NVIDIA GPU.",
+                Functions = "• NVIDIA Profile Inspector -silentImport\n• Low Latency Mode On, Power Management Max Performance\n• Shader Cache Unlimited, Threaded Optimization On\n• V-Sync Off, Triple Buffering Off, Texture Filtering High Performance\n• Revert in NVIDIA Control Panel (Restore defaults)",
+                Tag = CardTag.Safe,
+                EmbeddedActions = new[] { "nvidia_optimize" },
             };
             yield return new BoosterCard
             {
@@ -656,7 +714,24 @@ namespace OrangBooster
                 Functions = "• Device Metadata PreventDeviceMetadataFromNetwork = 1\n• DeviceMetadataServiceURL cleared\n• Applied under both Policies and CurrentVersion",
                 Tag = CardTag.Privacy,
                 Recommended = true,
+                WinUtilTweaks = new[] { "WPFTweaksPreventDeviceMetadataFromNetwork" },
                 EmbeddedActions = new[] { "device_companion_off" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Remove Microsoft GDID",
+                Description = "Wipes the local Microsoft identity (GDID) state and blocks re-registration. WARNING: breaks Microsoft account sign-in - Store, Xbox, OneDrive sync, Phone Link and MSA login will stop working until unblocked.",
+                Functions = "• Bundled degdid.ps1 -Protect, fully silent\n• Hosts + firewall blocks for the registration endpoints\n• Wipe target-user, SYSTEM and .DEFAULT GDID state\n• Refuses domain/Entra/MDM PCs instead of half-applying",
+                Tag = CardTag.Privacy,
+                EmbeddedActions = new[] { "degdid_protect" },
+            };
+            yield return new BoosterCard
+            {
+                Title = "Classic Snipping Tool",
+                Description = "Removes the UWP Snipping Tool and restores the classic Win32 version with your system language.",
+                Functions = "• Remove-AppxPackage *ScreenSketch*\n• Copy SnippingTool.exe + MUI to System32\n• Start menu shortcut",
+                Tag = CardTag.Customizable,
+                EmbeddedActions = new[] { "snipping_classic" },
             };
             yield return new BoosterCard
             {

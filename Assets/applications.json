@@ -17,8 +17,17 @@
         "winget": "7zip.7zip",
         "foss": true
     },
+    "abdownloadmanager": {
+        "category": "Utilities",
+        "choco": "ab-download-manager",
+        "content": "AB Download Manager",
+        "description": "AB Download Manager is an open-source download accelerator and manager with multi-threaded downloads, queue scheduling, speed limiting, and browser integration.",
+        "link": "https://abdownloadmanager.com/",
+        "winget": "amir1376.ABDownloadManager",
+        "foss": true
+    },
     "adobe": {
-        "category": "Multimedia Tools",
+        "category": "Document",
         "choco": "adobereader",
         "content": "Adobe Acrobat Reader",
         "description": "Adobe Acrobat Reader is a free PDF viewer with essential features for viewing, printing, and annotating PDF documents.",
@@ -98,6 +107,15 @@
         "winget": "AutoHotkey.AutoHotkey",
         "foss": true
     },
+    "battlenet": {
+        "category": "Games",
+        "choco": "na",
+        "winget": "Blizzard.BattleNet",
+        "content": "Battle.net",
+        "description": "Battle.net is a launcher for games created and developed by Activision Blizzard",
+        "link": "https://battle.net",
+        "foss": false
+    },
     "bitwarden": {
         "category": "Utilities",
         "choco": "bitwarden",
@@ -123,6 +141,15 @@
         "description": "Brave is a privacy-focused web browser that blocks ads and trackers, offering a faster and safer browsing experience.",
         "link": "https://www.brave.com",
         "winget": "Brave.Brave",
+        "foss": true
+    },
+    "bruno": {
+        "category": "Development",
+        "choco": "bruno",
+        "content": "Bruno",
+        "description": "Bruno is a local-first API client that stores collections as plain text files for version control and collaboration.",
+        "link": "https://www.usebruno.com/",
+        "winget": "Bruno.Bruno",
         "foss": true
     },
     "bulkcrapuninstaller": {
@@ -166,7 +193,7 @@
         "choco": "na",
         "content": "ChatGPT Desktop",
         "description": "The official ChatGPT desktop app for Windows, distributed through the Microsoft Store.",
-        "link": "https://apps.microsoft.com/detail/9nt1r1c2hh7j",
+        "link": "https://openai.com/chatgpt/download/",
         "winget": "msstore:9NT1R1C2HH7J",
         "foss": false
     },
@@ -193,7 +220,7 @@
         "choco": "chromium",
         "content": "Chromium",
         "description": "Chromium is the open-source project that serves as the foundation for various web browsers, including Chrome.",
-        "link": "https://github.com/Hibbiki/chromium-win64",
+        "link": "https://www.chromium.org/",
         "winget": "Hibbiki.Chromium",
         "foss": true
     },
@@ -319,9 +346,18 @@
         "choco": "dorion",
         "content": "Dorion",
         "description": "Tiny alternative Discord client with a smaller footprint, snappier startup, themes, plugins and more!",
-        "link": "https://github.com/SpikeHD/Dorion",
+        "link": "https://spikehd.dev/projects/dorion/",
         "winget": "SpikeHD.Dorion",
         "foss": true
+    },
+    "dockerdesktop": {
+        "category": "Development",
+        "choco": "docker-desktop",
+        "content": "Docker Desktop",
+        "description": "Docker Desktop provides a local environment for building, running, and testing containerized applications on Windows.",
+        "link": "https://www.docker.com/products/docker-desktop/",
+        "winget": "Docker.DockerDesktop",
+        "foss": false
     },
     "dotnet6": {
         "category": "Microsoft Tools",
@@ -395,6 +431,16 @@
         "winget": "Microsoft.Edge",
         "foss": false
     },
+    "es-de": {
+        "category": "Games",
+        "choco": "",
+        "content": "EmulationStation Desktop Edition",
+        "_comment": "This and emulationstation are two completely different things. ES-DE is your frontend for everything and has its own set of emulators. Emulationstation is a graphical frontend for RetroArch.",
+        "description": "EmulationStation Desktop Edition is a frontend for browsing and launching games from your multi-platform game collection.",
+        "link": "https://es-de.org/",
+        "winget": "ES-DE.EmulationStation-DE",
+        "foss": true
+    },
     "enteauth": {
         "category": "Utilities",
         "choco": "ente-auth",
@@ -418,8 +464,17 @@
         "choco": "files",
         "content": "Files",
         "description": "Alternative file explorer.",
-        "link": "https://github.com/files-community/Files",
+        "link": "https://files.community",
         "winget": "FilesCommunity.Files",
+        "foss": true
+    },
+    "fileconverter": {
+        "category": "Multimedia Tools",
+        "choco": "file-converter",
+        "content": "File Converter",
+        "description": "File Converter converts and compresses files from the Windows Explorer context menu.",
+        "link": "https://file-converter.io/",
+        "winget": "AdrienAllard.FileConverter",
         "foss": true
     },
     "firefox": {
@@ -451,11 +506,38 @@
     },
     "flux": {
         "category": "Utilities",
-        "choco": "flux",
+        "choco": "f.lux",
         "content": "F.lux",
         "description": "f.lux adjusts the color temperature of your screen to reduce eye strain during nighttime use.",
         "link": "https://justgetflux.com/",
         "winget": "flux.flux",
+        "foss": false
+    },
+    "foobar": {
+        "category": "Multimedia Tools",
+        "choco": "foobar2000",
+        "content": "foobar2000 (Music Player)",
+        "description": "foobar2000 is a highly customizable and extensible music player for Windows, known for its modular design and advanced features.",
+        "link": "https://www.foobar2000.org/",
+        "winget": "PeterPawlowski.foobar2000",
+        "foss": false
+    },
+    "fnm": {
+        "category": "Development",
+        "choco": "fnm",
+        "content": "Fast Node Manager",
+        "description": "Fast Node Manager (fnm) is a fast, cross-platform tool for installing and switching between Node.js versions.",
+        "link": "https://github.com/Schniz/fnm",
+        "winget": "Schniz.fnm",
+        "foss": true
+    },
+    "foxpdfreader": {
+        "category": "Document",
+        "choco": "foxitreader",
+        "content": "Foxit PDF Reader",
+        "description": "Foxit PDF Reader is a free PDF viewer with a familiar ribbon-style interface.",
+        "link": "https://www.foxit.com/pdf-reader/",
+        "winget": "Foxit.FoxitReader",
         "foss": false
     },
     "geforcenow": {
@@ -483,6 +565,24 @@
         "description": "Git is a distributed version control system widely used for tracking changes in source code during software development.",
         "link": "https://git-scm.com/",
         "winget": "Git.Git",
+        "foss": true
+    },
+    "gitextensions": {
+        "category": "Development",
+        "choco": "gitextensions",
+        "content": "Git Extensions",
+        "description": "Git Extensions is a graphical Git client for Windows with repository, history, and commit management tools.",
+        "link": "https://gitextensions.github.io/",
+        "winget": "GitExtensionsTeam.GitExtensions",
+        "foss": true
+    },
+    "githubcli": {
+        "category": "Development",
+        "choco": "gh",
+        "content": "GitHub CLI",
+        "description": "GitHub CLI brings pull requests, issues, releases, and other GitHub workflows to the terminal.",
+        "link": "https://cli.github.com/",
+        "winget": "GitHub.cli",
         "foss": true
     },
     "githubdesktop": {
@@ -530,21 +630,30 @@
         "winget": "TechPowerUp.GPU-Z",
         "foss": false
     },
+    "gsudo": {
+        "category": "Pro Tools",
+        "choco": "gsudo",
+        "content": "gsudo",
+        "description": "gsudo is a sudo equivalent for Windows. It allows you to run commands with elevated administrative privileges directly within the current console window.",
+        "link": "https://github.com/gerardog/gsudo",
+        "winget": "gerardog.gsudo",
+        "foss": true
+    },
     "helium": {
         "category": "Browsers",
         "choco": "helium",
         "content": "Helium",
         "description": "Private, fast, and honest web browser.",
-        "link": "https://github.com/imputnet/helium/",
+        "link": "https://helium.computer",
         "winget": "ImputNet.Helium",
         "foss": true
     },
     "hugo": {
-        "category": "Utilities",
+        "category": "Development",
         "choco": "hugo-extended",
         "content": "Hugo",
         "description": "The world's fastest framework for building websites.",
-        "link": "https://github.com/gohugoio/hugo/",
+        "link": "https://gohugo.io",
         "winget": "Hugo.Hugo.Extended",
         "foss": true
     },
@@ -583,6 +692,15 @@
         "link": "https://www.cpuid.com/softwares/hwmonitor.html",
         "winget": "CPUID.HWMonitor",
         "foss": false
+    },
+    "imhex": {
+        "category": "Pro Tools",
+        "choco": "imhex",
+        "content": "ImHex",
+        "description": "ImHex is a free and open-source hex editor for reverse engineers and programmers, featuring a custom pattern language for decoding binary formats, a disassembler, and data analysis tools.",
+        "link": "https://imhex.werwolv.net/",
+        "winget": "WerWolv.ImHex",
+        "foss": true
     },
     "imageglass": {
         "category": "Multimedia Tools",
@@ -661,7 +779,7 @@
         "choco": "jellyfin-media-player",
         "content": "Jellyfin Media Player",
         "description": "Jellyfin Media Player is a client application for the Jellyfin media server, providing access to your media library.",
-        "link": "https://github.com/jellyfin/jellyfin-media-player",
+        "link": "https://jellyfin.org/",
         "winget": "Jellyfin.JellyfinMediaPlayer",
         "foss": true
     },
@@ -690,6 +808,15 @@
         "description": "JPEGView is a lean, fast and highly configurable viewer/editor for JPEG, BMP, PNG, WEBP, TGA, GIF, JXL, HEIC, HEIF, AVIF, and TIFF images with a minimal GUI.",
         "link": "https://github.com/sylikc/jpegview",
         "winget": "sylikc.JPEGView",
+        "foss": true
+    },
+    "joplin": {
+        "category": "Document",
+        "choco": "joplin",
+        "content": "Joplin",
+        "description": "Joplin is an open-source note-taking and to-do application with synchronization capabilities.",
+        "link": "https://joplinapp.org/",
+        "winget": "Joplin.Joplin",
         "foss": true
     },
     "keepassxc": {
@@ -729,7 +856,7 @@
         "foss": true
     },
     "libreoffice": {
-        "category": "Multimedia Tools",
+        "category": "Document",
         "choco": "libreoffice-fresh",
         "content": "LibreOffice",
         "description": "LibreOffice is a powerful and free office suite, compatible with other major office suites.",
@@ -742,7 +869,7 @@
         "choco": "librewolf",
         "content": "LibreWolf",
         "description": "LibreWolf is a privacy-focused web browser based on Firefox, with additional privacy and security enhancements.",
-        "link": "https://librewolf-community.gitlab.io/",
+        "link": "https://librewolf.net/",
         "winget": "LibreWolf.LibreWolf",
         "foss": true
     },
@@ -757,11 +884,19 @@
     },
     "mpc-qt": {
         "category": "Multimedia Tools",
-        "choco": "mediainfo",
+        "choco": "mpc-qt",
         "content": "mpc-qt",
         "description": "Media Player Classic Qute Theater",
-        "link": "https://github.com/mpc-qt/mpc-qt",
+        "link": "https://mpc-qt.github.io",
         "winget": "mpc-qt.mpc-qt",
+        "foss": true
+    },
+    "mpv": {
+        "category": "Multimedia Tools",
+        "content": "mpv",
+        "description": "mpv is a free, open source, and cross-platform media player supporting a wide variety of media formats, codecs, and subtitle types.",
+        "link": "https://mpv.io/",
+        "winget": "shinchiro.mpv",
         "foss": true
     },
     "matrix": {
@@ -775,7 +910,7 @@
     },
     "minitoolpartitionwizard": {
         "category": "Utilities",
-        "choco": "minitoolpartitionwizard",
+        "choco": "partitionwizard",
         "content": "MiniTool Partition Wizard",
         "description": "Comprehensive free partition manager that performs advanced operations Windows natively cannot, such as merging partitions, converting file systems, and organizing disk capacity.",
         "link": "https://www.partitionwizard.com/",
@@ -805,7 +940,7 @@
         "choco": "mpc-hc-clsid2",
         "content": "Media Player Classic - Home Cinema",
         "description": "Media Player Classic - Home Cinema (MPC-HC) is a free and open-source video and audio player for Windows. MPC-HC is based on the original Guliverkli project and contains many additional features and bug fixes.",
-        "link": "https://github.com/clsid2/mpc-hc/",
+        "link": "https://mpc-hc.org/",
         "winget": "clsid2.mpc-hc",
         "foss": true
     },
@@ -819,7 +954,7 @@
         "foss": true
     },
     "msiafterburner": {
-        "category": "Utilities",
+        "category": "Pro Tools",
         "choco": "msiafterburner",
         "content": "MSI Afterburner",
         "description": "MSI Afterburner is a graphics card overclocking utility with advanced features.",
@@ -832,7 +967,7 @@
         "choco": "mullvad-app",
         "content": "Mullvad VPN",
         "description": "This is the VPN client software for the Mullvad VPN service.",
-        "link": "https://github.com/mullvad/mullvadvpn-app",
+        "link": "https://mullvad.net/",
         "winget": "MullvadVPN.MullvadVPN",
         "foss": true
     },
@@ -859,7 +994,7 @@
         "choco": "nanazip",
         "content": "NanaZip",
         "description": "NanaZip is a fast and efficient file compression and decompression tool.",
-        "link": "https://github.com/M2Team/NanaZip",
+        "link": "https://nanazip.org",
         "winget": "M2Team.NanaZip",
         "foss": true
     },
@@ -872,10 +1007,19 @@
         "winget": "Netbird.Netbird",
         "foss": true
     },
+    "tailscale": {
+        "category": "Pro Tools",
+        "choco": "tailscale",
+        "content": "Tailscale",
+        "description": "The Tailscale client allows you to connect all your devices using WireGuard®, without the hassle. Tailscale makes it as easy as installing an app and signing in.",
+        "link": "https://tailscale.com/",
+        "winget": "Tailscale.Tailscale",
+        "foss": false
+    },
     "naps2": {
-        "category": "Multimedia Tools",
+        "category": "Document",
         "choco": "naps2",
-        "content": "NAPS2 (Document Scanner)",
+        "content": "NAPS2 (Scanner)",
         "description": "NAPS2 is a document scanning application that simplifies the process of creating electronic documents.",
         "link": "https://www.naps2.com/",
         "winget": "Cyanfish.NAPS2",
@@ -935,7 +1079,7 @@
     "foss": true
     },
     "notepadplus": {
-        "category": "Multimedia Tools",
+        "category": "Development",
         "choco": "notepadplusplus",
         "content": "Notepad++",
         "description": "Notepad++ is a free, open-source code editor and Notepad replacement with support for multiple languages.",
@@ -971,13 +1115,22 @@
         "foss": true
     },
     "obsidian": {
-        "category": "Multimedia Tools",
+        "category": "Document",
         "choco": "obsidian",
         "content": "Obsidian",
         "description": "Obsidian is a powerful note-taking and knowledge management application.",
         "link": "https://obsidian.md/",
         "winget": "Obsidian.Obsidian",
         "foss": false
+    },
+    "okular": {
+        "category": "Document",
+        "choco": "okular",
+        "content": "Okular",
+        "description": "Okular is a versatile document viewer with advanced features.",
+        "link": "https://okular.kde.org/",
+        "winget": "KDE.Okular",
+        "foss": true
     },
     "onedrive": {
         "category": "Microsoft Tools",
@@ -989,7 +1142,7 @@
         "foss": false
     },
     "onlyoffice": {
-        "category": "Multimedia Tools",
+        "category": "Document",
         "choco": "onlyoffice",
         "content": "ONLYOFFICE Desktop",
         "description": "ONLYOFFICE Desktop is a comprehensive office suite for document editing and collaboration.",
@@ -1005,6 +1158,15 @@
         "link": "https://www.opautoclicker.com",
         "winget": "OPAutoClicker.OPAutoClicker",
         "foss": false
+    },
+    "opencode": {
+        "category": "Development",
+        "choco": "opencode",
+        "content": "OpenCode",
+        "description": "OpenCode is an open-source AI coding agent built for the terminal. It is provider-agnostic and supports local and hosted AI models.",
+        "link": "https://opencode.ai/",
+        "winget": "SST.opencode",
+        "foss": true
     },
     "openrgb": {
         "category": "Utilities",
@@ -1078,6 +1240,42 @@
         "winget": "Giorgiotani.Peazip",
         "foss": true
     },
+    "pdf-xchange": {
+        "category": "Document",
+        "choco": "pdfxchangeeditor",
+        "content": "PDF-XChange Editor",
+        "description": "A comprehensive Windows-based software suite and editor for creating, viewing, editing, annotating, and signing PDF files.",
+        "link": "https://www.pdf-xchange.com/",
+        "winget": "TrackerSoftware.PDF-XChangeEditor",
+        "foss": false
+    },
+    "pdf24creator": {
+        "category": "Document",
+        "choco": "pdf24",
+        "content": "PDF24 Creator",
+        "description": "Free and easy-to-use online/desktop PDF tools that make you more productive",
+        "link": "https://tools.pdf24.org/en/creator",
+        "winget": "geeksoftwareGmbH.PDF24Creator",
+        "foss": false
+    },
+    "pdfgear": {
+        "category": "Document",
+        "choco": "pdfgear",
+        "content": "PDFgear",
+        "description": "PDFgear is a piece of full-featured PDF management software for Windows, macOS, and mobile, and it's completely free to use.",
+        "link": "https://www.pdfgear.com/",
+        "winget": "PDFgear.PDFgear",
+        "foss": false
+    },
+    "pdfsam": {
+        "category": "Document",
+        "choco": "pdfsam",
+        "content": "PDFsam Basic",
+        "description": "PDFsam Basic is a free and open-source tool for splitting, merging, and rotating PDF files.",
+        "link": "https://pdfsam.org/",
+        "winget": "PDFsam.PDFsam",
+        "foss": true
+    },
     "playnite": {
         "category": "Games",
         "choco": "playnite",
@@ -1113,6 +1311,15 @@
         "link": "https://ohmyposh.dev/",
         "winget": "JanDeDobbeleer.OhMyPosh",
         "foss": true
+    },
+    "postman": {
+        "category": "Development",
+        "choco": "postman",
+        "content": "Postman",
+        "description": "Postman is an API platform and desktop client for designing, testing, documenting, and collaborating on APIs.",
+        "link": "https://www.postman.com/downloads/",
+        "winget": "Postman.Postman",
+        "foss": false
     },
     "powershell": {
         "category": "Microsoft Tools",
@@ -1197,11 +1404,20 @@
     },
     "processmonitor": {
         "category": "Microsoft Tools",
-        "choco": "procexp",
-        "content": "SysInternals Process Monitor",
+        "choco": "procmon",
+        "content": "Process Monitor",
         "description": "SysInternals Process Monitor is an advanced monitoring tool that shows real-time file system, registry, and process/thread activity.",
         "link": "https://docs.microsoft.com/en-us/sysinternals/downloads/procmon",
         "winget": "Microsoft.Sysinternals.ProcessMonitor",
+        "foss": false
+    },
+    "pstools": {
+        "category": "Microsoft Tools",
+        "choco": "pstools",
+        "content": "PsTools",
+        "description": "Microsoft Sysinternals PsTools provides utilities for managing local and remote Windows systems and monitoring processes. PsExec can run processes under the SYSTEM account when the user has local administrative rights on the target system.",
+        "link": "https://learn.microsoft.com/en-us/sysinternals/downloads/pstools",
+        "winget": "Microsoft.Sysinternals.PsTools",
         "foss": false
     },
     "putty": {
@@ -1231,6 +1447,15 @@
         "winget": "qBittorrent.qBittorrent",
         "foss": true
     },
+    "qownnotes": {
+      "category": "Document",
+      "choco": "qownnotes",
+      "content": "QOwnNotes",
+      "description": "QOwnNotes is a free open-source note-taking app with Nextcloud/ownCloud integration.",
+      "link": "https://www.qownnotes.org/",
+      "winget": "pbek.QOwnNotes",
+      "foss": true  
+    },
     "qtox": {
         "category": "Communications",
         "choco": "qtox",
@@ -1259,7 +1484,7 @@
         "foss": false
     },
     "rufus": {
-        "category": "Utilities",
+        "category": "Pro Tools",
         "choco": "rufus",
         "content": "Rufus Imager",
         "description": "Rufus is a utility that helps format and create bootable USB drives, such as USB keys or pen drives.",
@@ -1304,7 +1529,7 @@
         "foss": false
     },
     "systeminformer": {
-        "category": "Development",
+        "category": "Pro Tools",
         "choco": "systeminformer",
         "content": "System Informer",
         "description": "A free, powerful, multi-purpose tool that helps you monitor system resources, debug software and detect malware.",
@@ -1329,6 +1554,15 @@
         "link": "https://www.signalrgb.com/",
         "winget": "WhirlwindFX.SignalRgb",
         "foss": false
+    },
+    "simplenote": {
+        "category": "Document",
+        "choco": "simplenote",
+        "content": "Simplenote",
+        "description": "Simplenote is an easy way to keep notes, lists, ideas and more.",
+        "link": "https://simplenote.com/",
+        "winget": "Automattic.Simplenote",
+        "foss": true
     },
     "simplewall": {
         "category": "Pro Tools",
@@ -1357,6 +1591,15 @@
         "winget": "StartIsBack.StartAllBack",
         "foss": false
     },
+    "starship": {
+        "category": "Development",
+        "choco": "starship",
+        "content": "Starship (Shell Prompt)",
+        "description": "Starship is a fast, customizable, cross-platform prompt for PowerShell and other shells.",
+        "link": "https://starship.rs/",
+        "winget": "Starship.Starship",
+        "foss": true
+    },
     "steam": {
         "category": "Games",
         "choco": "steam-client",
@@ -1364,6 +1607,15 @@
         "description": "Steam is a digital distribution platform for purchasing and playing video games, offering multiplayer gaming, video streaming, and more.",
         "link": "https://store.steampowered.com/about/",
         "winget": "Valve.Steam",
+        "foss": false
+    },
+    "roblox": {
+        "category": "Games",
+        "choco": "na",
+        "content": "Roblox",
+        "description": "Roblox is a platform and game creation system that allows users to create and play games developed by the community.",
+        "link": "https://www.roblox.com/",
+        "winget": "Roblox.Roblox",
         "foss": false
     },
     "sublimetext": {
@@ -1375,19 +1627,46 @@
         "winget": "SublimeHQ.SublimeText.4",
         "foss": false
     },
+    "sumatra": {
+        "category": "Document",
+        "choco": "sumatrapdf",
+        "content": "Sumatra PDF",
+        "description": "Sumatra PDF is a lightweight and fast PDF viewer with minimalistic design.",
+        "link": "https://www.sumatrapdfreader.org/free-pdf-reader.html",
+        "winget": "SumatraPDF.SumatraPDF",
+        "foss": true
+    },
     "sunshine": {
         "category": "Selfhosted Tools",
         "choco": "sunshine",
         "content": "Sunshine/GameStream Server",
         "description": "Sunshine is a GameStream server that allows you to remotely play PC games on Android devices, offering low-latency streaming.",
-        "link": "https://github.com/LizardByte/Sunshine",
+        "link": "https://app.lizardbyte.dev/Sunshine/",
         "winget": "LizardByte.Sunshine",
+        "foss": true
+    },
+    "synctrayzor": {
+        "category": "Selfhosted Tools",
+        "choco": "synctrayzor",
+        "content": "SyncTrayzor",
+        "description": "SyncTrayzor is a Windows tray utility that bundles and wraps Syncthing, making it behave like a native application to easily manage and monitor file synchronization.",
+        "link": "https://github.com/GermanCoding/SyncTrayzor",
+        "winget": "GermanCoding.SyncTrayzor",
+        "foss": true
+    },
+    "syncthing": {
+        "category": "Selfhosted Tools",
+        "choco": "syncthing",
+        "content": "Syncthing (CLI / Web UI)",
+        "description": "Syncthing is a decentralized, peer-to-peer file synchronization tool that securely syncs files directly across devices without cloud servers, managed via a local web interface.",
+        "link": "https://syncthing.net/",
+        "winget": "Syncthing.Syncthing",
         "foss": true
     },
     "tcpview": {
         "category": "Microsoft Tools",
         "choco": "tcpview",
-        "content": "SysInternals TCPView",
+        "content": "TCPView",
         "description": "SysInternals TCPView is a network monitoring tool that displays a detailed list of all TCP and UDP endpoints on your system.",
         "link": "https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview",
         "winget": "Microsoft.Sysinternals.TCPView",
@@ -1404,7 +1683,7 @@
     },
     "teamviewer": {
         "category": "Utilities",
-        "choco": "teamviewer9",
+        "choco": "teamviewer",
         "content": "TeamViewer",
         "description": "TeamViewer is a popular remote access and support software that allows you to connect to and control remote devices.",
         "link": "https://www.teamviewer.com/",
@@ -1418,6 +1697,15 @@
         "description": "TEAMSPEAK. YOUR TEAM. YOUR RULES. Use crystal clear sound to communicate with your teammates cross-platform with military-grade security, lag-free performance & unparalleled reliability and uptime.",
         "link": "https://www.teamspeak.com/",
         "winget": "TeamSpeakSystems.TeamSpeakClient",
+        "foss": false
+    },
+    "teamspeak6": {
+        "category": "Communications",
+        "choco": "na",
+        "content": "TeamSpeak 6",
+        "description": "TEAMSPEAK. YOUR TEAM. YOUR RULES. Use crystal clear sound to communicate with your teammates cross-platform with military-grade security, lag-free performance & unparalleled reliability and uptime.",
+        "link": "https://www.teamspeak.com/",
+        "winget": "TeamSpeakSystems.TeamSpeakClient.Beta.6",
         "foss": false
     },
     "telegram": {
@@ -1488,7 +1776,7 @@
         "choco": "translucenttb",
         "content": "TranslucentTB",
         "description": "TranslucentTB is a tool that allows you to customize the transparency of the Windows Taskbar.",
-        "link": "https://github.com/TranslucentTB/TranslucentTB",
+        "link": "https://translucenttb.github.io",
         "winget": "CharlesMilette.TranslucentTB",
         "foss": true
     },
@@ -1504,7 +1792,7 @@
     "ungoogled": {
         "category": "Browsers",
         "choco": "ungoogled-chromium",
-        "content": "Ungoogled",
+        "content": "Ungoogled Chromium",
         "description": "Ungoogled Chromium is a version of Chromium without Google's integration for enhanced privacy and control.",
         "link": "https://github.com/Eloston/ungoogled-chromium",
         "winget": "eloston.ungoogled-chromium",
@@ -1512,11 +1800,20 @@
     },
     "unity": {
         "category": "Development",
-        "choco": "unityhub",
+        "choco": "unity-hub",
         "content": "Unity Game Engine",
         "description": "Unity is a powerful game development platform for creating 2D, 3D, augmented reality, and virtual reality games.",
         "link": "https://unity.com/",
         "winget": "Unity.UnityHub",
+        "foss": false
+    },
+    "vagrant": {
+        "category": "Development",
+        "choco": "vagrant",
+        "content": "Vagrant",
+        "description": "Vagrant builds and manages reproducible virtual machine development environments from declarative configuration.",
+        "link": "https://developer.hashicorp.com/vagrant",
+        "winget": "Hashicorp.Vagrant",
         "foss": false
     },
     "everything": {
@@ -1559,8 +1856,8 @@
         "category": "Communications",
         "choco": "na",
         "content": "Vesktop",
-        "description": "A cross platform electron-based desktop app aiming to give you a snappier Discord experience with Vencord pre-installed.",
-        "link": "https://github.com/Vencord/Vesktop",
+        "description": "A cross-platform electron-based desktop app aiming to give you a snappier Discord experience with Vencord pre-installed.",
+        "link": "https://vesktop.dev",
         "winget": "Vencord.Vesktop",
         "foss": true
     },
@@ -1650,7 +1947,7 @@
         "choco": "na",
         "content": "WhatsApp Desktop",
         "description": "WhatsApp Desktop is the official Windows desktop messaging app from Meta, distributed through the Microsoft Store.",
-        "link": "https://apps.microsoft.com/detail/9nksqgp7f2nh",
+        "link": "https://www.whatsapp.com/download",
         "winget": "msstore:9NKSQGP7F2NH",
         "foss": false
     },
@@ -1717,6 +2014,15 @@
         "winget": "MHNexus.HxD",
         "foss": false
     },
+    "xournal": {
+        "category": "Document",
+        "choco": "xournalplusplus",
+        "content": "Xournal++",
+        "description": "Xournal++ is an open-source handwriting notetaking software with PDF annotation capabilities.",
+        "link": "https://xournalpp.github.io/",
+        "winget": "Xournal++.Xournal++",
+        "foss": true
+    },
     "yarn": {
         "category": "Development",
         "choco": "yarn",
@@ -1764,9 +2070,8 @@
     },
     "Overwolf": {
         "category": "Games",
-        "choco": "overwolf",
-        "content": "Overwolf",
-        "description": "Popular platform for game overlays and companion apps (mod managers, trackers, etc.), widely used by gamers.",
+        "content": "CurseForge",
+        "description": "CurseForge is a desktop application for managing mods and modpacks across multiple games, powered by Overwolf.",
         "link": "https://www.overwolf.com/app/overwolf-curseforge",
         "winget": "Overwolf.CurseForge",
         "foss": false
@@ -1782,7 +2087,7 @@
     },
     "ZenBrowser": {
         "category": "Browsers",
-        "choco": "zen-browser",
+        "choco": "na",
         "content": "Zen Browser",
         "description": "The modern, privacy-focused, performance-driven browser built on Firefox.",
         "link": "https://zen-browser.app/",
@@ -1796,6 +2101,15 @@
         "description": "Zed is a modern, high-performance code editor designed from the ground up for speed and collaboration.",
         "link": "https://zed.dev/",
         "winget": "ZedIndustries.Zed",
+        "foss": true
+    },
+    "zotero": {
+        "category": "Document",
+        "choco": "zotero",
+        "content": "Zotero",
+        "description": "Zotero is a free, easy-to-use tool to help you collect, organize, cite, and share your research materials.",
+        "link": "https://www.zotero.org/",
+        "winget": "DigitalScholar.Zotero",
         "foss": true
     },
     "deskflow": {
@@ -1824,5 +2138,15 @@
         "content": "Lua",
         "link": "https://github.com/rjpcomputing/luaforwindows",
         "foss": true
+    },
+    "CloudflareWARP": {
+        "category": "Utilities",
+        "choco": "warp",
+        "winget": "Cloudflare.Warp",
+        "description": "WARP is a freemium VPN service provided by Cloudflare. Includes usage of Cloudflare's DNS",
+        "content": "Cloudflare WARP",
+        "link": "https://one.one.one.one",
+        "foss": false
     }
 }
+

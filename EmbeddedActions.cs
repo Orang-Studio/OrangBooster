@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,6 +45,7 @@ namespace OrangBooster
                     "dism_strip_features"       => await DismStripFeaturesAsync(ct),
                     "advertising_id_off"        => await AdvertisingIdOffAsync(ct),
                     "appx_bloat_remove"         => await AppxBloatRemoveAsync(ct),
+                    "appx_remove_selected"      => await RunAppxSelectedAsync(AppxCatalog.SelectedIds(), ct),
                     "perf_responsiveness"       => await PerfResponsivenessAsync(ct),
                     "all_a11y_off"              => await AccessibilityKeysOffAsync(ct),
                     "explorer_home_gallery_off" => await ExplorerHomeGalleryOffAsync(ct),
@@ -105,11 +107,27 @@ namespace OrangBooster
                     "xbox_remove_full"          => await XboxRemoveFullAsync(ct),
                     "edge_remove_full"          => await EdgeRemoveFullAsync(ct),
                     "ai_full_policies"          => await AiFullPoliciesAsync(ct),
+                    "ai_deep_clean"             => await AiDeepCleanAsync(ct),
+                    "ai_ti_strip"               => await AiTiStripAsync(ct),
+                    "ai_cbs_strip"              => await AiCbsStripAsync(ct),
+                    "ai_files_nuke"             => await AiFilesNukeAsync(ct),
+                    "ai_uwp_settings"           => await AiUwpSettingsAsync(ct),
+                    "ai_voice_off"              => await AiVoiceOffAsync(ct),
+                    "ai_reinstall_block"        => await AiReinstallBlockAsync(ct),
+                    "snipping_classic"          => await SnippingClassicAsync(ct),
                     "paint_ai_off"              => await PaintAiOffAsync(ct),
                     "device_companion_off"      => await DeviceCompanionOffAsync(ct),
                     "oem_freeware_remove"       => await OemFreewareRemoveAsync(ct),
                     "ps7_telemetry_off"         => await Ps7TelemetryOffAsync(ct),
                     "gaming_perf_pack"          => await GamingPerfPackAsync(ct),
+                    "disable_fso"               => await DisableFsoAsync(ct),
+                    "nvidia_optimize"           => await NvidiaOptimizeAsync(ct),
+                    "start_recommended_off"     => await StartRecommendedOffAsync(ct),
+                    "transparency_off"          => await TransparencyOffAsync(ct),
+                    "search_indexing_off"       => await SearchIndexingOffAsync(ct),
+                    "startup_apps_off"          => await StartupAppsOffAsync(ct),
+                    "dma_region_eea"            => await DmaRegionEeaAsync(ct),
+                    "degdid_protect"            => await DegdidProtectAsync(ct),
                     _ => -1,
                 };
             }
@@ -298,6 +316,40 @@ namespace OrangBooster
             ";
             return ScriptRunner.RunInlinePowerShellAsync(script, "appx-bloat", ct);
         }
+        public static Task<int> RunAppxSelectedAsync(string[] packageIds, CancellationToken ct = default)
+        {
+            var ids = (packageIds ?? System.Array.Empty<string>()).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToArray();
+            if (ids.Length == 0) { Logger.Info("AppX selective remover: nothing selected"); return Task.FromResult(0); }
+            var list = string.Join(",", System.Array.ConvertAll(ids, a => "'" + a.Replace("'", "''") + "'"));
+            string script = $@"
+            $ErrorActionPreference='SilentlyContinue'
+            $ids = @({list})
+            $failed = @()
+            Write-Output (""Removing "" + $ids.Count + "" selected AppX package(s)"")
+            foreach ($id in $ids) {{
+                $pkgs = @(Get-AppxPackage ""*$id*"" -AllUsers | Sort-Object -Property PackageFullName -Unique)
+                if ($pkgs.Count -eq 0) {{ Write-Output ""Not installed: $id"" }}
+                foreach ($pkg in $pkgs) {{
+                    try {{
+                        Remove-AppxPackage -Package $pkg.PackageFullName -AllUsers -ErrorAction Stop
+                        Write-Output (""Removed "" + $pkg.PackageFullName)
+                    }} catch {{ Write-Output (""Failed: "" + $pkg.PackageFullName + "" - "" + $_.Exception.Message); $failed += $pkg.PackageFullName }}
+                }}
+                $provs = @(Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -like ""*$id*"" }})
+                foreach ($prov in $provs) {{
+                    try {{
+                        Remove-AppxProvisionedPackage -Online -PackageName $prov.PackageName -ErrorAction Stop | Out-Null
+                        Write-Output (""Removed provisioned "" + $prov.PackageName)
+                    }} catch {{ Write-Output (""Failed provisioned: "" + $prov.PackageName + "" - "" + $_.Exception.Message); $failed += $prov.PackageName }}
+                }}
+                $left = @(Get-AppxPackage ""*$id*"" -AllUsers)
+                if ($left.Count -gt 0) {{ Write-Output (""Still present: "" + $id); $failed += $id }}
+            }}
+            if ($failed.Count -gt 0) {{ Write-Output (""AppX selective remover finished with failures: "" + ($failed -join ', ')); exit 1 }}
+            Write-Output 'AppX selective remover verified all gone'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "appx-selected", System.TimeSpan.FromMinutes(15), ct);
+        }
         static Task<int> PerfResponsivenessAsync(CancellationToken ct) => Task.Run(() => Reg(
             (HKCU, @"Control Panel\Desktop", "MenuShowDelay", "0"),
             (HKCU, @"Control Panel\Desktop", "WaitToKillAppTimeout", "2000"),
@@ -368,12 +420,12 @@ namespace OrangBooster
                 "ob_registry_pack", "force_dark_no_spotlight", "nuke_ai_copilot",
                 "perf_responsiveness", "advertising_id_off", "all_a11y_off",
                 "mouse_accel_off", "gamebar_off", "privacy_pack", "explorer_view_tweaks",
-                "account_nags_off", "settings_home_off",
+                "account_nags_off", "settings_home_off", "start_recommended_off",
                 "explorer_home_gallery_off", "clipboard_history_on", "long_paths_on",
                 "set_dns_cloudflare", "net_bindings_off", "power_ultimate", "display_max_refresh",
                 "disable_disk_encryption", "disable_ucpd", "uninstall_terminal", "remove_rdp_shortcuts",
                 "bing_websearch_off", "remove_onedrive", "xbox_services_off", "minimize_services",
-                "ai_full_policies", "paint_ai_off", "device_companion_off", "gaming_perf_pack",
+                "ai_full_policies", "ai_deep_clean", "ai_ti_strip", "ai_cbs_strip", "ai_files_nuke", "ai_uwp_settings", "ai_voice_off", "ai_reinstall_block", "paint_ai_off", "device_companion_off", "gaming_perf_pack",
                 "unpin_store", "clear_start_pins", "clear_taskbar_pins", "remove_capabilities_pack", "disable_features_pack" };
             var failed = new System.Collections.Generic.List<string>();
             foreach (var step in steps)
@@ -584,6 +636,11 @@ namespace OrangBooster
         static Task<int> DxWindowedOptAsync(CancellationToken ct) => Task.Run(() => Reg(
             (HKCU, @"Software\Microsoft\DirectX\UserGpuPreferences", "DirectXUserGlobalSettings", "SwapEffectUpgradeEnable=1;")
         ), ct);
+        static Task<int> DisableFsoAsync(CancellationToken ct) => Task.Run(() => Reg(
+            (HKCU, @"System\GameConfigStore", "GameDVR_DXGIHonorFSEWindowsCompatible", 1)
+        ), ct);
+        static Task<int> DegdidProtectAsync(CancellationToken ct)
+            => ScriptRunner.RunDegdidAsync("-Protect", ct);
         static Task<int> DisableCoreIsolationAsync(CancellationToken ct) => Task.Run(() => Reg(
             (HKLM, @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity", "Enabled", 0)
         ), ct);
@@ -661,7 +718,6 @@ namespace OrangBooster
             }
 
             foreach ($d in @(
-                ""$env:USERPROFILE\OneDrive"",
                 ""$env:LOCALAPPDATA\Microsoft\OneDrive"",
                 ""$env:ProgramData\Microsoft OneDrive"",
                 ""$env:SystemDrive\OneDriveTemp""
@@ -1186,7 +1242,8 @@ namespace OrangBooster
                 $ErrorActionPreference='SilentlyContinue'
                 $pkgs = 'Microsoft.GamingApp','Microsoft.XboxApp','Microsoft.XboxGameOverlay',
                         'Microsoft.XboxGamingOverlay','Microsoft.XboxSpeechToTextOverlay',
-                        'Microsoft.Xbox.TCUI','Microsoft.XboxIdentityProvider'
+                        'Microsoft.Xbox.TCUI','Microsoft.XboxIdentityProvider',
+                        'Microsoft.XboxGameCallableUI'
                 foreach ($p in $pkgs) {
                     Write-Output ""Removing $p""
                     Get-AppxPackage -AllUsers $p | Remove-AppxPackage -AllUsers
@@ -1196,6 +1253,9 @@ namespace OrangBooster
                 $rk = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR'
                 if (-not (Test-Path $rk)) { New-Item -Path $rk -Force | Out-Null }
                 Set-ItemProperty -Path $rk -Name 'AppCaptureEnabled' -Type DWord -Value 0 -Force
+                $left = @(Get-AppxPackage -AllUsers | Where-Object { $_.Name -like 'Microsoft.Xbox*' -or $_.Name -like 'Microsoft.GamingApp' })
+                if ($left.Count -gt 0) { Write-Output ('Remaining Xbox packages: ' + (($left | ForEach-Object { $_.Name }) -join ', ')) }
+                else { Write-Output 'Xbox packages verified removed' }
                 Write-Output 'Xbox apps removed (GamingServices left intact for Game Pass)'
                 ";
             return ScriptRunner.RunInlinePowerShellAsync(script, "rm-xbox", ct);
@@ -1389,11 +1449,665 @@ Write-Output 'Store unpin (interactive user) done'
             (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "HubsSidebarEnabled", 0),
             (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "ComposeInlineEnabled", 0),
             (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "TabOrganizerSettingEnabled", 0),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "DevToolsGenAiSettings", 2),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "RemixAvailability", 0),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "CopilotOnSensitiveContentEnabled", 0),
+            (HKLM, @"SYSTEM\CurrentControlSet\Services\IsoEnvBroker", "Start", 4),
+            (HKLM, @"SYSTEM\CurrentControlSet\Services\IsolationSession", "Start", 4),
+            (HKLM, @"SYSTEM\CurrentControlSet\Services\IsoSessionCore", "Start", 4),
+            (HKLM, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\WorkloadManager\HCF\Status", "IsHcfPresent", 0),
+            (HKLM, @"SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\8\1561856655", "EnabledState", 1),
+            (HKLM, @"SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\8\497250959", "EnabledState", 1),
+            (HKLM, @"SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\8\890768015", "EnabledState", 1),
+            (HKLM, @"SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\8\3653481614", "EnabledState", 1),
+            (HKLM, @"SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\8\3245750924", "EnabledState", 1),
             (HKCU, @"Software\Microsoft\Office\16.0\Word\Options", "EnableCopilot", 0),
             (HKCU, @"Software\Microsoft\Office\16.0\Excel\Options", "EnableCopilot", 0),
             (HKCU, @"Software\Microsoft\Office\16.0\PowerPoint\Options", "Enable Copilot in Settings", 0),
-            (HKCU, @"Software\Microsoft\Office\16.0\OneNote\Options\Copilot", "CopilotEnabled", 0)
+            (HKCU, @"Software\Microsoft\Office\16.0\OneNote\Options\Copilot", "CopilotEnabled", 0),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\training\general", "disabletraining", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\training\specific\adaptivefloatie", "disabletrainingofadaptivefloatie", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\alternativetext", "disablecontentsafety", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\imagequestionandanswering", "disablecontentsafety", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\promptassistance", "disablecontentsafety", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\rewrite", "disablecontentsafety", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\summarization", "disablecontentsafety", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\summarizationwithreferences", "disablecontentsafety", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\texttotable", "disablecontentsafety", 1),
+            (HKCU, @"Software\Policies\Microsoft\office\16.0\common\privacy", "controllerconnectedservicesenabled", 2),
+            (HKCU, @"Software\Policies\Microsoft\office\16.0\common\privacy", "usercontentdisabled", 2),
+            (HKCU, @"Software\Microsoft\Office\16.0\OneNote\Options\Copilot", "CopilotNotebooksEnabled", 0),
+            (HKCU, @"Software\Microsoft\Office\16.0\OneNote\Options\Copilot", "CopilotSkittleEnabled", 0),
+            (HKCU, @"Software\Policies\Microsoft\Cloud\Office\16.0\common\copilot", "CopilotPinning", 0),
+            (HKCU, @"Software\Policies\Microsoft\Cloud\Office\16.0\common\copilot", "PinningStateforCopilotApp", 0),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\generativeAI", "Value", "Deny"),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\systemAIModels", "Value", "Deny"),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone\Microsoft.Copilot_8wekyb3d8bbwe", "Value", "Deny"),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe", "Value", "Deny"),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\systemAIModels", "Value", "Deny"),
+            (HKLM, @"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\Capabilities\systemAIModels", "RecordUsageData", 0),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\AppPrivacy", "LetAppsAccessGenerativeAI", 2),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\AppPrivacy", "LetAppsAccessSystemAIModels", 2),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications\Microsoft.Copilot_8wekyb3d8bbwe", "SleepDisabled", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe", "DisabledByUser", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe", "Disabled", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe", "SleepDisabled", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarCompanion", 0),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\SettingSync\WindowsSettingHandlers", "A9HomeContentEnabled", 0),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\CPSS\Store\InkingAndTypingPersonalization", "Value", 0),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\CloudContent", "DisableConsumerAccountStateContent", 1),
+            (HKCU, @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe\WebViewHostStartupId", "State", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "IsSignedUpForTargetingService", 0),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "LeftTargetingService", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "IsNotInterestedInTargetingService", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "GettingStartedWelcomePageViewed", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "GettingStartedStickerGeneratorPageViewed", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "GettingStartedGenerativeImageEditPageViewed", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "GettingStartedGenerativeErasePageViewed", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "GettingStartedGenerativeFillPageViewed", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View", "GettingStartedImageCreatorPageViewed", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Edge", "CopilotCoworkToolActionsEnabled", 0)
         ), ct);
+
+        static Task<int> AiDeepCleanAsync(CancellationToken ct)
+        {
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'AI deep clean start'
+            foreach ($t in (Get-ScheduledTask -TaskPath '*WindowsAI*' | Select-Object -ExpandProperty TaskName)) {
+                Disable-ScheduledTask -TaskName $t | Out-Null
+                Unregister-ScheduledTask -TaskName $t -Confirm:$false | Out-Null
+                Write-Output ""Disabled task $t""
+            }
+            Remove-Item ""$env:SystemRoot\System32\Tasks\Microsoft\Windows\WindowsAI"" -Recurse -Force
+            foreach ($t in (Get-ScheduledTask -TaskName '*Office Actions Server*' | Select-Object -ExpandProperty TaskName)) {
+                Disable-ScheduledTask -TaskName $t | Out-Null
+                Unregister-ScheduledTask -TaskName $t -Confirm:$false | Out-Null
+                Write-Output ""Disabled task $t""
+            }
+            Remove-Item ""$env:SystemRoot\System32\Tasks\Microsoft\Office\Office Actions Server"" -Force
+            foreach ($ch in 'Microsoft-Windows-AI-ModelContextProtocol/Admin','Microsoft-Windows-AI-Platform/Admin','Microsoft-Windows-AI-ModelContextProtocol/Operational','Microsoft-Windows-AI-Platform/Operational') {
+                & wevtutil.exe sl $ch /e:false | Out-Null
+            }
+            Write-Output 'AI scheduled tasks + event channels off'
+            try {
+                $mp = Get-MpPreference -ErrorAction Stop
+                if ($mp.AiAgentProtection -ne 0) { Set-MpPreference -AiAgentProtection Disabled }
+                if ($mp.AiAgentNetworkInspection -ne 0) { Set-MpPreference -AiAgentNetworkInspection Disabled }
+                Write-Output 'Defender AI agent protection disabled'
+            } catch { Write-Output 'Defender AI cmdlets unavailable, skipping' }
+            $ifeo = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\DefenderAiPlatformHost.exe'
+            if (-not (Test-Path $ifeo)) { New-Item -Path $ifeo -Force | Out-Null }
+            Set-ItemProperty -Path $ifeo -Name 'Debugger' -Value 'taskkill.exe' -Type String -Force
+            Write-Output 'Defender AI host process blocked'
+            $now = (Get-Date).ToFileTime()
+            foreach ($k in @(
+                'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\generativeAI',
+                'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\systemAIModels',
+                'HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone\Microsoft.Copilot_8wekyb3d8bbwe',
+                'HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe',
+                'HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\systemAIModels')) {
+                if (Test-Path $k) { New-ItemProperty -Path $k -Name 'LastSetTime' -Value $now -PropertyType QWord -Force | Out-Null }
+            }
+            $flows = Join-Path $env:SystemRoot 'System32\SystemSettingsAdminFlows.exe'
+            if (Test-Path $flows) { Start-Process $flows -ArgumentList 'SetCamSystemGlobal systemAIModels 0' -WindowStyle Hidden -Wait }
+            Write-Output 'AI consent stores stamped'
+            $rp = Join-Path $env:SystemRoot 'System32\IntegratedServicesRegionPolicySet.json'
+            if (Test-Path $rp) {
+                takeown /f $rp | Out-Null
+                icacls $rp /grant '*S-1-5-32-544:F' /t | Out-Null
+                try {
+                    $j = Get-Content $rp -Raw | ConvertFrom-Json
+                    $n = 0
+                    foreach ($p in ($j.policies | Where-Object { $_.'$comment' -like '*CoPilot*' })) { $p.defaultState = 'disabled'; $n++ }
+                    foreach ($p in ($j.policies | Where-Object { $_.'$comment' -like '*Manage Recall*' })) { $p.defaultState = 'disabled'; $n++ }
+                    $j | ConvertTo-Json -Depth 100 | Set-Content $rp -Force
+                    Write-Output ""Region policies disabled: $n""
+                } catch { Write-Output 'Region policy JSON edit failed, skipping' }
+            }
+            Stop-Process -Name msedge -Force
+            $ls = Join-Path $env:LOCALAPPDATA 'Microsoft\Edge\User Data\Local State'
+            if (Test-Path $ls) {
+                try {
+                    $j = (Get-Content $ls -Raw).Replace('""""', '""_empty""') | ConvertFrom-Json -ErrorAction Stop
+                    if ($null -eq ($j.browser | Get-Member -MemberType NoteProperty enabled_labs_experiments -ErrorAction SilentlyContinue)) {
+                        $j.browser | Add-Member -MemberType NoteProperty -Name enabled_labs_experiments -Value @()
+                    }
+                    foreach ($f in @('edge-copilot-mode@2','edge-ntp-composer@2','edge-compose@2','edge-ai-search@5','edge-ai-explain-devtools@2','edge-devtools-css-copilot@2')) {
+                        if ($j.browser.enabled_labs_experiments -notcontains $f) { $j.browser.enabled_labs_experiments += $f }
+                    }
+                    ($j | ConvertTo-Json -Compress -Depth 10).Replace('""_empty""', '""""') | Set-Content $ls -Encoding UTF8 -Force
+                    Write-Output 'Edge Copilot lab flags disabled'
+                } catch { Write-Output 'Edge Local State edit failed, skipping' }
+            }
+            Remove-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications\Backup\MicrosoftWindows.Client.Core_cw5n1h2txyewy!Global.CopilotNudges' -Recurse -Force
+            Write-Output 'Copilot nudges backup removed'
+            foreach ($sid in (Get-ChildItem 'registry::HKEY_USERS' | Where-Object { $_.Name -like 'HKEY_USERS\S-1-5-21*' -and $_.Name -notlike '*Classes*' } | ForEach-Object { $_.Name })) {
+                Set-ItemProperty -Path (""registry::"" + $sid + '\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins') -Name 'CopilotPWAPin' -Value 0 -Type DWord -Force
+                Set-ItemProperty -Path (""registry::"" + $sid + '\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins') -Name 'RecallPin' -Value 0 -Type DWord -Force
+            }
+            Write-Output 'Taskbar pins cleared for all loaded users'
+            Write-Output 'AI deep clean done'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-deep", ct);
+        }
+
+        static Task<int> AiTiStripAsync(CancellationToken ct)
+        {
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'AI TI strip start'
+            function Invoke-TiCommand([string]$Code) {
+                $b = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Code))
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+                $def = (Get-CimInstance -ClassName Win32_Service -Filter ""Name='TrustedInstaller'"").PathName
+                if ([string]::IsNullOrWhiteSpace($def) -or $def -notlike '*TrustedInstaller.exe*') { $def = ""$env:SystemRoot\servicing\TrustedInstaller.exe"" }
+                sc.exe config TrustedInstaller binPath= ""cmd.exe /c PowerShell.exe -encodedcommand $b"" | Out-Null
+                sc.exe start TrustedInstaller | Out-Null
+                Start-Sleep -Seconds 3
+                sc.exe config TrustedInstaller binpath= ""`""$def`"""" | Out-Null
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+            }
+            $ids = @('MicrosoftWindows.Client.AIX','MicrosoftWindows.Client.CoPilot','Microsoft.Windows.Ai.Copilot.Provider','Microsoft.Copilot','Microsoft.MicrosoftOfficeHub','MicrosoftWindows.Client.CoreAI','Microsoft.Edge.GameAssist','Microsoft.Office.ActionsServer','aimgr','Microsoft.WritingAssistant','Clipchamp.Clipchamp','Microsoft.AIFabric.CBS*','MicrosoftWindows.*.Voiess','MicrosoftWindows.*.Speion','MicrosoftWindows.*.Livtop','MicrosoftWindows.*.Filons','WindowsWorkload.Data.Analysis*','WindowsWorkload.Manager.*','WindowsWorkload.PSOnnxRuntime*','WindowsWorkload.PSTokenizer*','WindowsWorkload.QueryBlockList.*','WindowsWorkload.QueryProcessor*','WindowsWorkload.SemanticText*','WindowsWorkload.Data.ContentExtraction*','WindowsWorkload.ScrRegDetection*','WindowsWorkload.TextRecognition*','WindowsWorkload.Data.ImageSearch*','WindowsWorkload.ImageContentModeration*','WindowsWorkload.ImageSearch*','WindowsWorkload.PSTokenizerShared*','WindowsWorkload.ImageTextSearch*','WindowsWorkload.SettingsModel*','WindowsWorkload.Data.PhiSilica*','WindowsWorkload.EP.Qualcomm*','WindowsWorkload.ImageDescription*','WindowsWorkload.ImageLLMAdapter*','WindowsWorkload.LanguageModel*','WindowsWorkload.SessionManager*','WindowsWorkload.TextContentModeration*','WindowsWorkload.WinMLShared*','WindowsWorkload.Data.SettingsModel*','MicrosoftCorporationII.WinML.Qualcomm*','Microsoft.Ink.Handwriting*','WindowsWorkload.EP.Intel.OpenVINO*','WindowsWorkload.OnnxRuntime*')
+            $joined = $ids -join ','
+            $tiCode = @'
+$choices = @(Get-Content (Join-Path $env:TEMP 'obaiids.txt') -ErrorAction SilentlyContinue)
+$provisioned = Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+$installed = Get-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+$store = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
+$users = @('S-1-5-18')
+if (Test-Path $store) { $users += @((Get-ChildItem $store -ErrorAction SilentlyContinue | Where-Object { $_ -like '*S-1-5-21*' }).PSChildName) }
+foreach ($choice in $choices) {
+    foreach ($appx in @($provisioned | Where-Object { $_.PackageName -like ""*$choice*"" })) {
+        $fam = ($installed | Where-Object { $_.Name -eq $appx.DisplayName }).PackageFamilyName
+        if ($fam) {
+            New-Item ""$store\Deprovisioned\$fam"" -Force | Out-Null
+            try { Set-NonRemovableAppsPolicy -Online -PackageFamilyName $fam -NonRemovable 0 -ErrorAction Stop } catch { }
+        }
+        try { Remove-AppxProvisionedPackage -PackageName $appx.PackageName -Online -AllUsers -ErrorAction Stop | Out-Null } catch { }
+    }
+    foreach ($appx in @($installed | Where-Object { $_.PackageFullName -like ""*$choice*"" })) {
+        $full = $appx.PackageFullName
+        $fam = $appx.PackageFamilyName
+        New-Item ""$store\Deprovisioned\$fam"" -Force | Out-Null
+        try { Set-NonRemovableAppsPolicy -Online -PackageFamilyName $fam -NonRemovable 0 -ErrorAction Stop } catch { }
+        Remove-Item -Path ""$store\InboxApplications\$full"" -Force -ErrorAction SilentlyContinue
+        foreach ($u in $appx.PackageUserInformation) {
+            $sid = $u.UserSecurityId.Sid
+            New-Item ""$store\EndOfLife\$sid\$full"" -Force | Out-Null
+            try { Remove-AppxPackage -Package $full -User $sid -ErrorAction Stop } catch { }
+        }
+        try { Remove-AppxPackage -Package $full -AllUsers -ErrorAction Stop } catch { }
+        foreach ($sid in $users) { New-Item ""$store\EndOfLife\$sid\$full"" -Force | Out-Null }
+    }
+}
+'@
+            $joined | Set-Content (Join-Path $env:TEMP 'obaiids.txt') -Force
+            Invoke-TiCommand $tiCode
+            Remove-Item (Join-Path $env:TEMP 'obaiids.txt') -Force -ErrorAction SilentlyContinue
+            for ($r = 0; $r -lt 3; $r++) {
+                $left = @(Get-AppxPackage -AllUsers | Where-Object { $n = $_.Name; @($ids | Where-Object { $n -like $_ }).Count -gt 0 })
+                if ($left.Count -eq 0) { break }
+                foreach ($p in $left) { try { Remove-AppxPackage -Package $p.PackageFullName -AllUsers -ErrorAction Stop } catch { } }
+                Start-Sleep -Seconds 2
+            }
+            $left = @(Get-AppxPackage -AllUsers | Where-Object { $n = $_.Name; @($ids | Where-Object { $n -like $_ }).Count -gt 0 })
+            if ($left.Count -gt 0) { Write-Output ('AI packages still present: ' + (($left | ForEach-Object { $_.Name }) -join ', ')) }
+            else { Write-Output 'AI packages verified removed' }
+            $pol = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages'
+            if (-not (Test-Path $pol)) { New-Item -Path $pol -Force | Out-Null }
+            Set-ItemProperty -Path $pol -Name 'Enabled' -Value 1 -Type DWord -Force
+            foreach ($k in @('Microsoft.Copilot_8wekyb3d8bbwe','Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe','Clipchamp.Clipchamp_yxz26nhyzhsrt')) {
+                if (-not (Test-Path ""$pol\$k"")) { New-Item -Path ""$pol\$k"" -Force | Out-Null }
+                Set-ItemProperty -Path ""$pol\$k"" -Name 'RemovePackage' -Value 1 -Type DWord -Force
+            }
+            Set-ItemProperty -Path $pol -Name 'DynamicRemovalList' -Value @('aimgr_8wekyb3d8bbwe','Microsoft.Edge.GameAssist_8wekyb3d8bbwe') -Type MultiString -Force
+            $cop = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoInstalledPWAs'
+            if (-not (Test-Path $cop)) { New-Item -Path $cop -Force | Out-Null }
+            Set-ItemProperty -Path $cop -Name 'CopilotPWAPreinstallCompleted' -Value 1 -Type DWord -Force
+            Set-ItemProperty -Path $cop -Name 'Microsoft.Copilot_8wekyb3d8bbwe' -Value 1 -Type DWord -Force
+            $un = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Copilot'
+            if (Test-Path $un) {
+                $us = (Get-ItemProperty -Path $un -Name 'UninstallString' -ErrorAction SilentlyContinue).UninstallString
+                if ($us) { Start-Process cmd.exe -ArgumentList ""/c $us"" -WindowStyle Hidden -Wait }
+            }
+            $rb = Join-Path $env:TEMP 'obreg1.exe'
+            Copy-Item (Get-Command reg.exe).Source $rb -Force -ErrorAction SilentlyContinue
+            & $rb add 'HKCU\Software\Microsoft\Windows\Shell\BrandedKey' /v 'BrandedKeyChoiceType' /t REG_SZ /d 'Search' /f 2>$null | Out-Null
+            & $rb add 'HKCU\Software\Microsoft\Windows\Shell\BrandedKey' /v 'AppAumid' /t REG_SZ /d ' ' /f 2>$null | Out-Null
+            Remove-Item $rb -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\CopilotKey' -Name 'SetCopilotHardwareKey' -Value ' ' -Type String -Force
+            Write-Output 'AI TI strip done'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-ti", System.TimeSpan.FromMinutes(30), ct);
+        }
+
+        static Task<int> AiCbsStripAsync(CancellationToken ct)
+        {
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'AI CBS strip start'
+            $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages'
+            foreach ($p in (Get-ChildItem $regPath -ErrorAction SilentlyContinue)) {
+                $n = $p.PSChildName
+                if ($n -like '*AIX*' -or $n -like '*Recall*' -or $n -like '*Copilot*' -or $n -like '*CoreAI*') {
+                    $vis = try { Get-ItemPropertyValue ""registry::$($p.Name)"" -Name Visibility -ErrorAction Stop } catch { $null }
+                    if ($vis -eq 2) {
+                        takeown /f ""registry::$($p.Name)"" 2>$null | Out-Null
+                        Set-ItemProperty ""registry::$($p.Name)"" -Name Visibility -Value 1 -Force
+                        New-ItemProperty ""registry::$($p.Name)"" -Name DefVis -PropertyType DWord -Value 2 -Force | Out-Null
+                        Remove-Item ""registry::$($p.Name)\Owners"" -Force -Recurse
+                        Remove-Item ""registry::$($p.Name)\Updates"" -Force -Recurse
+                        try { Remove-WindowsPackage -Online -PackageName $n -NoRestart -ErrorAction Stop | Out-Null; Write-Output ""Removed $n"" }
+                        catch { dism.exe /Online /Remove-Package /PackageName:$n /NoRestart /Quiet 2>$null | Out-Null }
+                    }
+                }
+            }
+            try {
+                $st = (Get-WindowsOptionalFeature -Online -FeatureName 'Recall' -ErrorAction Stop).State
+                if ($st -and $st -ne 'DisabledWithPayloadRemoved') {
+                    try { Disable-WindowsOptionalFeature -Online -FeatureName 'Recall' -Remove -NoRestart -ErrorAction Stop | Out-Null }
+                    catch { dism.exe /Online /Disable-Feature /FeatureName:Recall /Remove /NoRestart /Quiet 2>$null | Out-Null }
+                    Write-Output 'Recall optional feature removed with payload'
+                } else { Write-Output 'Recall feature already gone' }
+            } catch {
+                $info = dism.exe /Online /Get-FeatureInfo /FeatureName:Recall 2>$null | Out-String
+                if ($LASTEXITCODE -eq 0 -and $info -notmatch 'Disabled with Payload Removed') {
+                    dism.exe /Online /Disable-Feature /FeatureName:Recall /Remove /NoRestart /Quiet 2>$null | Out-Null
+                }
+            }
+            Write-Output 'AI CBS strip done'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-cbs", System.TimeSpan.FromMinutes(30), ct);
+        }
+
+        static Task<int> AiFilesNukeAsync(CancellationToken ct)
+        {
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'AI files nuke start'
+            function Invoke-TiCommand([string]$Code) {
+                $b = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Code))
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+                $def = (Get-CimInstance -ClassName Win32_Service -Filter ""Name='TrustedInstaller'"").PathName
+                if ([string]::IsNullOrWhiteSpace($def) -or $def -notlike '*TrustedInstaller.exe*') { $def = ""$env:SystemRoot\servicing\TrustedInstaller.exe"" }
+                sc.exe config TrustedInstaller binPath= ""cmd.exe /c PowerShell.exe -encodedcommand $b"" | Out-Null
+                sc.exe start TrustedInstaller | Out-Null
+                Start-Sleep -Seconds 3
+                sc.exe config TrustedInstaller binpath= ""`""$def`"""" | Out-Null
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+            }
+            function Remove-Locked([string]$Path) {
+                if (-not (Test-Path $Path)) { return }
+                takeown /f $Path 2>$null | Out-Null
+                icacls $Path /grant '*S-1-5-32-544:F' /t 2>$null | Out-Null
+                try { Remove-Item -Path $Path -Force -Recurse -ErrorAction Stop }
+                catch { Invoke-TiCommand (""Remove-Item -Path '"" + $Path + ""' -Force -Recurse"") }
+            }
+            $keys = @('MicrosoftWindows.Client.AIX','MicrosoftWindows.Client.CoPilot','Microsoft.Windows.Ai.Copilot.Provider','Microsoft.Copilot','Microsoft.MicrosoftOfficeHub','MicrosoftWindows.Client.CoreAI','Microsoft.Edge.GameAssist','Microsoft.Office.ActionsServer','aimgr','Microsoft.WritingAssistant','Microsoft.AIFabric.CBS','WindowsWorkload','Voiess','Speion','Livtop','Filons')
+            foreach ($root in @(""$env:SystemRoot\SystemApps"", ""$env:ProgramFiles\WindowsApps"", ""$env:ProgramData\Microsoft\Windows\AppRepository\Packages"", ""$env:SystemRoot\SystemApps\SxS"")) {
+                if (-not (Test-Path $root)) { continue }
+                foreach ($d in (Get-ChildItem -Path $root -Directory -Force -ErrorAction SilentlyContinue)) {
+                    foreach ($k in $keys) { if ($d.Name -like ""*$k*"") { Remove-Locked $d.FullName; break } }
+                }
+            }
+            foreach ($root in @(""$env:SystemRoot\servicing\Packages"", ""$env:SystemRoot\System32\CatRoot"")) {
+                if (-not (Test-Path $root)) { continue }
+                foreach ($f in (Get-ChildItem -Path $root -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like '*UserExperience-AIX*' -or $_.FullName -like '*Copilot*' -or $_.FullName -like '*UserExperience-Recall*' -or $_.FullName -like '*CoreAI*' })) {
+                    Remove-Locked $f.FullName
+                }
+            }
+            foreach ($p in @(""$env:LOCALAPPDATA\Microsoft\WindowsApps\ActionsMcpHost.exe"", ""$env:SystemRoot\System32\config\systemprofile\AppData\Local\Microsoft\WindowsApps\ActionsMcpHost.exe"", ""$env:SystemRoot\System32\config\systemprofile\AppData\Local\Microsoft\WindowsApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\ActionsMcpHost.exe"", ""$env:LOCALAPPDATA\Microsoft\WindowsApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\ActionsMcpHost.exe"")) {
+                Remove-Locked $p
+            }
+            foreach ($k in $keys) {
+                foreach ($d in (Get-ChildItem ""$env:LOCALAPPDATA\Packages"" -Filter ""*$k*"" -ErrorAction SilentlyContinue)) { Remove-Locked $d.FullName }
+            }
+            foreach ($p in @(""$env:SystemRoot\System32\Windows.AI.MachineLearning.dll"", ""$env:SystemRoot\SysWOW64\Windows.AI.MachineLearning.dll"", ""$env:SystemRoot\System32\Windows.AI.MachineLearning.Preview.dll"", ""$env:SystemRoot\SysWOW64\Windows.AI.MachineLearning.Preview.dll"", ""$env:SystemRoot\System32\SettingsHandlers_Copilot.dll"", ""$env:SystemRoot\System32\SettingsHandlers_A9.dll"", ""$env:SystemRoot\System32\Windows.AI.Agents.dll"", ""$env:SystemRoot\SysWOW64\Windows.AI.Agents.dll"", ""$env:SystemRoot\System32\Windows.Internal.AI.PlatformCapability.dll"", ""$env:SystemRoot\SysWOW64\Windows.Internal.AI.PlatformCapability.dll"")) {
+                Remove-Locked $p
+            }
+            $ms = ""${env:ProgramFiles(x86)}\Microsoft""
+            foreach ($folder in @('Edge','EdgeCore','EdgeWebView')) {
+                if (-not (Test-Path ""$ms\$folder"")) { continue }
+                $sub = if ($folder -eq 'EdgeCore') { '' } else { 'Application' }
+                foreach ($d in (Get-ChildItem -Path ""$ms\$folder\$sub"" -Filter 'copilot_provider_msix' -Directory -Recurse -ErrorAction SilentlyContinue)) { Remove-Locked $d.FullName }
+            }
+            $eu = ""${env:ProgramFiles(x86)}\Microsoft\EdgeUpdate""
+            if (Test-Path $eu) {
+                foreach ($f in (Get-ChildItem $eu -Recurse -Filter '*CopilotUpdate.exe*' -ErrorAction SilentlyContinue)) { Remove-Locked $f.FullName }
+            }
+            if (Test-Path $ms) {
+                foreach ($f in (Get-ChildItem $ms -Recurse -Filter '*Copilot_setup*' -ErrorAction SilentlyContinue)) { Remove-Locked $f.FullName }
+            }
+            Remove-ItemProperty 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate' -Name 'CopilotUpdatePath' -ErrorAction SilentlyContinue
+            Remove-ItemProperty 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate' -Name 'CopilotUpdatePath' -ErrorAction SilentlyContinue
+            if (Test-Path ""$env:windir\InboxApps"") {
+                foreach ($f in (Get-ChildItem -Path ""$env:windir\InboxApps"" -Filter '*Copilot*' -ErrorAction SilentlyContinue)) { Remove-Locked $f.FullName }
+            }
+            foreach ($p in @(""$env:ProgramFiles\Microsoft Office\root\vfs\ProgramFilesCommonX64\Microsoft Shared\Office16\AI"", ""$env:ProgramFiles\Microsoft Office\root\vfs\ProgramFilesCommonX86\Microsoft Shared\Office16\AI"", ""$env:ProgramFiles\Microsoft Office\root\Office16\AI"", ""$env:ProgramFiles\Microsoft Office\root\vfs\ProgramFilesCommonX64\Microsoft Shared\Office16\ActionsServer"", ""$env:ProgramFiles\Microsoft Office\root\Integration\Addons\aimgr.msix"", ""$env:ProgramFiles\Microsoft Office\root\Integration\Addons\WritingAssistant.msix"", ""$env:ProgramFiles\Microsoft Office\root\Integration\Addons\ActionsServer.msix"")) {
+                Remove-Locked $p
+            }
+            Remove-Item -Path ""$env:LOCALAPPDATA\CoreAIPlatform*"" -Force -Recurse -ErrorAction SilentlyContinue
+            if ($env:OneDrive) { Remove-Item -Path ""$env:OneDrive\Microsoft Copilot Chat Files"" -Force -Recurse -ErrorAction SilentlyContinue }
+            foreach ($u in @('registry::HKEY_CLASSES_ROOT\ms-office-ai','registry::HKEY_CLASSES_ROOT\ms-copilot','registry::HKEY_CLASSES_ROOT\ms-clicktodo')) {
+                Remove-Item -Path $u -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            Write-Output 'AI files nuke done'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-files", System.TimeSpan.FromMinutes(30), ct);
+        }
+
+        static Task<int> AiUwpSettingsAsync(CancellationToken ct)
+        {
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            $tempDir = Join-Path $env:TEMP 'ob-aiuwp\'
+            New-Item $tempDir -ItemType Directory -Force | Out-Null
+            Write-Output 'AI UWP settings start'
+            function Set-UwpAppRegistryEntry {
+                [CmdletBinding()]
+                param([Parameter(ValueFromPipeline)]$InputObject, [string]$FilePath)
+                begin {
+                    $script:abort = $false
+                    $AppSettingsRegPath = 'HKEY_USERS\APP_SETTINGS'
+                    $RegContent = ""Windows Registry Editor Version 5.00`n""
+                    reg.exe UNLOAD $AppSettingsRegPath 2>&1 | Out-Null
+                    $max = 30
+                    $attempts = 0
+                    $kill = @('SearchHost','TextInputHost','WebExperienceHostApp','SnippingTool')
+                    Stop-Process -Name $kill -Force -ErrorAction SilentlyContinue
+                    do {
+                        Start-Sleep -Milliseconds 200
+                        reg.exe LOAD $AppSettingsRegPath $FilePath *>$null
+                        $attempts++
+                    } while ($LASTEXITCODE -ne 0 -and $attempts -lt $max)
+                    if ($LASTEXITCODE -ne 0) { $script:abort = $true; return 2 }
+                }
+                process {
+                    if ($script:abort) { return 2 }
+                    $Value = $InputObject.Value
+                    $Value = switch ($InputObject.Type) {
+                        '5f5e10b' { '{0:x2}' -f [byte][int]$Value }
+                        '5f5e10c' {
+                            $bytes = [System.Text.Encoding]::Unicode.GetBytes($Value + ""`0"")
+                            ($bytes | ForEach-Object { '{0:x2}' -f $_ }) -join ' '
+                        }
+                        '5f5e104' {
+                            $bytes = [BitConverter]::GetBytes([int]$Value)
+                            ($bytes | ForEach-Object { '{0:x2}' -f $_ }) -join ' '
+                        }
+                    }
+                    $Value = $Value -replace '\s+', ','
+                    $timestampBytes = [BitConverter]::GetBytes([int64](Get-Date).ToFileTime())
+                    $Timestamp = ($timestampBytes | ForEach-Object { '{0:x2}' -f $_ }) -join ','
+                    if ($InputObject.Path) { $RegKey = ""$($AppSettingsRegPath)\$($InputObject.Path)"" }
+                    else {
+                        try {
+                            $RegKey = (Get-ChildItem ""registry::$AppSettingsRegPath"" -Recurse -ErrorAction Stop | Where-Object { $_.pschildname -like '*Evoke' }).Name
+                            if (!$RegKey) { throw }
+                        } catch {
+                            [gc]::Collect()
+                            reg.exe UNLOAD $AppSettingsRegPath *>$null
+                            $script:abort = $true
+                            return 1
+                        }
+                    }
+                    $RegContent += ""`n[$RegKey]`n""""$($InputObject.Name)""""=hex($($InputObject.Type)):$Value,$Timestamp`n"" -replace '(?m)^ *'
+                }
+                end {
+                    if ($script:abort) { return 1 }
+                    [gc]::Collect()
+                    $out = Join-Path $tempDir 'uwp_app_settings.reg'
+                    $RegContent | Out-File -FilePath $out
+                    reg.exe IMPORT $out 2>&1 | Out-Null
+                    reg.exe UNLOAD $AppSettingsRegPath | Out-Null
+                    Remove-Item -Path $out -Force -ErrorAction SilentlyContinue
+                }
+            }
+            $photos = ""$env:LOCALAPPDATA\Packages\Microsoft.Windows.Photos_8wekyb3d8bbwe\Settings\settings.dat""
+            if (Test-Path $photos) {
+                Write-Output 'Disabling AI flags in Photos'
+                foreach ($n in @('ViewerOcr-IsEnabled','ViewerOcr-SearchInWeb-IsEnabled','ViewerCopilotOnContextMenu-IsEnabled','ViewerBingVisualSearch-IsEnabled','SDXL-IsEnabled','ImageCategorizationIsEnabledAMD','ImageCategorizationIsEnabledIntel','WindowsIndexerSemanticSearchIsEnabledQCOM','WindowsIndexerSemanticSearchIsEnabledIntel','WindowsIndexerSemanticSearchIsEnabledAMD','WindowsIndexerSemanticSearchIsEnabledLNL','EditHVC-GenerativeErase-IsEnabled','EditHVC-Win10-GenerativeErase-IsEnabled','EditHVC-SuperResolution-IsEnabled','EditHVCSuperResolutionIsEnabledQCOM','EditHVCSuperResolutionIsEnabledAMD','EditHVCSuperResolutionIsEnabledIntel','EditHVC-Stylizer-IsEnabled','EditHVC-Stylizer-IsEnabled-STX','EditHVCStylizerIsEnabledQCOM','EditHVCStylizerIsEnabledAMD','EditHVC-AIBadges-IsEnabled','EditHVC-NewAutoEnhance-IsEnabled','EditHVC_BackgroundBlur_IsEnabled','EditHVC-BackgroundBlur-IsEnabled','EditHVC-Win10-BackgroundBlur-IsEnabled','EditHVCRelightIsEnabledQCOM','Designer-IsEnabled','Designer-NewIcon-IsEnabled','FileExplorer-ContextMenu-CreateWithDesigner-IsEnabled','MoodboardIsEnabledIntel','MoodboardIsEnabledAMD','MoodboardIsEnabledQCOM','Moodboard-IsEnabled','Moodboard-IsEnabled-STX','OneDriveOnlineSearch-IsEnabled','OneDriveOnlineSearch-IndexWarming-IsEnabled','OneDriveOnlineSearchFallbackFilter-IsEnabled','LocationSearch-IsEnabled')) {
+                    [PSCustomObject]@{ Name = $n; Value = '0'; Type = '5f5e10b' } | Set-UwpAppRegistryEntry -FilePath $photos
+                }
+                Write-Output 'Photos AI flags off'
+            } else { Write-Output 'Photos settings.dat not present, skipping' }
+            $cbs = ""$env:LOCALAPPDATA\Packages\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\Settings\settings.dat""
+            if (Test-Path $cbs) {
+                Write-Output 'Disabling App Actions per app'
+                foreach ($app in @('Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe','Microsoft.Office.ActionsServer_8wekyb3d8bbwe','MSTeams_8wekyb3d8bbwe','Microsoft.Paint_8wekyb3d8bbwe','Microsoft.Windows.Photos_8wekyb3d8bbwe','MicrosoftWindows.Client.CBS_cw5n1h2txyewy')) {
+                    [PSCustomObject]@{ Name = $app; Path = 'LocalState\DisabledApps'; Value = '1'; Type = '5f5e10b' } | Set-UwpAppRegistryEntry -FilePath $cbs
+                }
+                Write-Output 'App Actions disabled'
+            } else { Write-Output 'CBS settings.dat not present, skipping' }
+            $sk = ""$env:LOCALAPPDATA\Packages\Microsoft.ScreenSketch_8wekyb3d8bbwe\Settings\settings.dat""
+            if (Test-Path $sk) {
+                Stop-Process -Name SnippingTool -Force -ErrorAction SilentlyContinue
+                [PSCustomObject]@{ Name = 'DeviceHasNpu'; Path = 'LocalState'; Value = '0'; Type = '5f5e104' } | Set-UwpAppRegistryEntry -FilePath $sk
+                Write-Output 'Snipping Tool NPU features off'
+            } else { Write-Output 'Snipping Tool settings.dat not present, skipping' }
+            $spot = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\DesktopSpotlight\Creatives'
+            if (Test-Path $spot) {
+                try {
+                    $j = Get-ItemPropertyValue $spot -Name 'Creatives' -ErrorAction Stop | ConvertFrom-Json
+                    foreach ($item in $j.ad) {
+                        if ($item.relatedContent) { $item.relatedContent = @($item.relatedContent | Where-Object { $_.label -ne 'Ask Copilot' }) }
+                    }
+                    Set-ItemProperty $spot -Name 'Creatives' -Value ($j | ConvertTo-Json -Depth 20 -Compress) -Force
+                    Write-Output 'Ask Copilot removed from Spotlight'
+                } catch { }
+            }
+            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Output 'AI UWP settings done'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-uwp", System.TimeSpan.FromMinutes(15), ct);
+        }
+
+        static Task<int> AiVoiceOffAsync(CancellationToken ct)
+        {
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'AI voice effects off start'
+            function Invoke-TiCommand([string]$Code) {
+                $b = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Code))
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+                $def = (Get-CimInstance -ClassName Win32_Service -Filter ""Name='TrustedInstaller'"").PathName
+                if ([string]::IsNullOrWhiteSpace($def) -or $def -notlike '*TrustedInstaller.exe*') { $def = ""$env:SystemRoot\servicing\TrustedInstaller.exe"" }
+                sc.exe config TrustedInstaller binPath= ""cmd.exe /c PowerShell.exe -encodedcommand $b"" | Out-Null
+                sc.exe start TrustedInstaller | Out-Null
+                Start-Sleep -Seconds 3
+                sc.exe config TrustedInstaller binpath= ""`""$def`"""" | Out-Null
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+            }
+            foreach ($key in (Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture' -ErrorAction SilentlyContinue)) {
+                foreach ($prop in ($key.Property | Where-Object { $_ -like '{*},*' })) {
+                    $defn = try { (Get-ItemProperty -Path $key.PSPath -Name $prop -ErrorAction Stop).$prop } catch { '' }
+                    if (""$defn"" -like '*VocaEffectPack*') {
+                        $rp = $key.PSPath -replace 'Microsoft\.PowerShell\.Core\\Registry::', ''
+                        try { Set-ItemProperty -Path $key.PSPath -Name '{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5' -Value 1 -Type DWord -Force -ErrorAction Stop }
+                        catch { Invoke-TiCommand (""Reg.exe add '"" + $rp + ""' /v '{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5' /t REG_DWORD /d '1' /f"") }
+                        Write-Output ""Disabled VocaEffectPack on $($key.PSChildName)""
+                    }
+                }
+            }
+            $voice = Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'OK' -and $_.Name -eq 'Voice Clarity' }
+            if ($voice) {
+                & pnputil.exe /remove-device $voice.InstanceId 2>$null | Out-Null
+                $pp = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceInstall\Restrictions'
+                if (-not (Test-Path $pp)) { New-Item -Path $pp -Force | Out-Null }
+                Set-ItemProperty -Path $pp -Name 'DenyInstanceIDs' -Value 1 -Type DWord -Force
+                Set-ItemProperty -Path $pp -Name 'DenyInstanceIDsRetroactive' -Value 0 -Type DWord -Force
+                $dp = ""$pp\DenyInstanceIDs""
+                if (-not (Test-Path $dp)) { New-Item -Path $dp -Force | Out-Null }
+                try { $n = [string](((Get-Item -Path (""registry::"" + $dp) -ErrorAction Stop).Property | Measure-Object -Maximum).Maximum + 1) }
+                catch { $n = '1' }
+                Set-ItemProperty -Path $dp -Name $n -Value $voice.InstanceId -Type String -Force
+                Write-Output 'Voice Clarity device removed and blocked'
+            } else { Write-Output 'No Voice Clarity device present' }
+            Write-Output 'AI voice effects off done'
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-voice", System.TimeSpan.FromMinutes(15), ct);
+        }
+
+        static Task<int> AiReinstallBlockAsync(CancellationToken ct)
+        {
+            System.Environment.SetEnvironmentVariable("OB_ASSETS", System.IO.Path.Combine(ScriptRunner.AssetsDir, "AiBlock"));
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'AI reinstall block start'
+            $arm = ((Get-CimInstance -Class Win32_ComputerSystem).SystemType -match 'ARM64') -or ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64')
+            $arch = if ($arm) { 'arm64' } else { 'amd64' }
+            $certPath = 'HKLM:\Software\Microsoft\SystemCertificates\ROOT\Certificates\8A334AA8052DD244A647306A76B8178FA215F344'
+            if (-not (Test-Path $certPath)) { New-Item -Path $certPath -Force | Out-Null }
+            $have = Get-WindowsPackage -Online -ErrorAction SilentlyContinue | Where-Object { $_.PackageName -like '*zoicware*' }
+            if ($have -and $have.PackageName -like '*1.0.0.0') {
+                Write-Output 'Replacing old reinstall-block package'
+                Remove-WindowsPackage -Online -PackageName $have.PackageName -NoRestart -ErrorAction SilentlyContinue | Out-Null
+                $have = $null
+            }
+            if (-not $have) {
+                $cab = Join-Path $env:OB_ASSETS (""ZoicwareRemoveWindowsAI-"" + $arch + ""1.0.0.1.cab"")
+                if (Test-Path $cab) {
+                    Write-Output ""Installing reinstall-block package ($arch)""
+                    try { Add-WindowsPackage -Online -PackagePath $cab -NoRestart -IgnoreCheck -ErrorAction Stop | Out-Null }
+                    catch { dism.exe /Online /Add-Package /PackagePath:""$cab"" /NoRestart /IgnoreCheck 2>$null | Out-Null }
+                    $have = Get-WindowsPackage -Online -ErrorAction SilentlyContinue | Where-Object { $_.PackageName -like '*zoicware*' }
+                } else { Write-Output 'Reinstall-block CAB not bundled, skipping' }
+            }
+            if ($have) { Write-Output 'AI reinstall block installed' } else { Write-Output 'AI reinstall block not present' }
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "ai-block", System.TimeSpan.FromMinutes(15), ct);
+        }
+
+        static Task<int> SnippingClassicAsync(CancellationToken ct)
+        {
+            System.Environment.SetEnvironmentVariable("OB_ASSETS", ScriptRunner.AssetsDir);
+            const string script = @"
+            $ErrorActionPreference='SilentlyContinue'
+            Write-Output 'Classic Snipping Tool restore start'
+            Get-AppxPackage '*ScreenSketch*' -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue
+            $src = Join-Path $env:OB_ASSETS 'SnippingClassic'
+            function Copy-System([string]$From, [string]$To) {
+                try { Copy-Item -Path $From -Destination $To -Force -ErrorAction Stop }
+                catch {
+                    takeown /f $To 2>$null | Out-Null
+                    icacls $To /grant '*S-1-5-32-544:F' 2>$null | Out-Null
+                    Copy-Item -Path $From -Destination $To -Force -ErrorAction SilentlyContinue
+                }
+            }
+            Copy-System (Join-Path $src 'SnippingTool.exe') (Join-Path $env:SystemRoot 'System32\SnippingTool.exe')
+            Copy-System (Join-Path $src 'SnippingTool.exe.mui') (Join-Path $env:SystemRoot 'System32\en-US\SnippingTool.exe.mui')
+            $langId = try { (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language' -Name 'InstallLanguage' -ErrorAction Stop).InstallLanguage } catch { '' }
+            $map = @{ '0804'='zh-CN'; '0412'='ko-KR'; '0404'='zh-TW'; '0422'='uk-UA'; '041f'='tr-TR'; '041e'='th-TH'; '241a'='sr-Latn-RS'; '0424'='sl-SI'; '041b'='sk-SK'; '0419'='ru-RU'; '0418'='ro-RO'; '0816'='pt-PT'; '0416'='pt-BR'; '0415'='pl-PL'; '0413'='nl-NL'; '0414'='nb-NO'; '0426'='lv-LV'; '0427'='lt-LT'; '0411'='ja-JP'; '0410'='it-IT'; '040e'='hu-HU'; '041a'='hr-HR'; '040d'='he-IL'; '040c'='fr-FR'; '0c0c'='fr-CA'; '040b'='fi-FI'; '0425'='et-EE'; '080a'='es-MX'; '040a'='es-ES'; '0809'='en-GB'; '0408'='el-GR'; '0407'='de-DE'; '0406'='da-DK'; '0405'='cs-CZ'; '0402'='bg-BG'; '0401'='ar-SA'; '041d'='sv-SE' }
+            if ($map.ContainsKey($langId)) {
+                $pad = $map[$langId]
+                Copy-System (Join-Path $src ""snipping_lang_files\$pad\SnippingTool.exe.mui"") (Join-Path $env:SystemRoot ""System32\$pad\SnippingTool.exe.mui"")
+                Write-Output ""Copied $pad language file""
+            }
+            $wsh = New-Object -ComObject WScript.Shell
+            $lnk = $wsh.CreateShortcut(""$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories\SnippingTool.lnk"")
+            $lnk.TargetPath = Join-Path $env:SystemRoot 'System32\SnippingTool.exe'
+            $lnk.Save()
+            if (Test-Path (Join-Path $env:SystemRoot 'System32\SnippingTool.exe')) { Write-Output 'Classic Snipping Tool restored' }
+            else { Write-Output 'Classic Snipping Tool copy failed'; exit 1 }
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "snip-classic", System.TimeSpan.FromMinutes(10), ct);
+        }
+
+        static Task<int> StartRecommendedOffAsync(CancellationToken ct) => Task.Run(() => Reg(
+            (HKCU, @"Software\Policies\Microsoft\Windows\Explorer", "HideRecommendedSection", 1),
+            (HKLM, @"SOFTWARE\Policies\Microsoft\Windows\Explorer", "HideRecommendedSection", 1),
+            (HKLM, @"SOFTWARE\Microsoft\PolicyManager\current\device\Start", "HideRecommendedSection", 1),
+            (HKLM, @"SOFTWARE\Microsoft\PolicyManager\current\device\Education", "IsEducationEnvironment", 1),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_IrisRecommendations", 0),
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_TrackDocs", 0)
+        ), ct);
+        static Task<int> TransparencyOffAsync(CancellationToken ct) => Task.Run(() => Reg(
+            (HKCU, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", 0)
+        ), ct);
+        static Task<int> SearchIndexingOffAsync(CancellationToken ct)
+            => ScriptRunner.RunInlinePowerShellAsync(@"
+            Stop-Service -Name WSearch -Force -ErrorAction SilentlyContinue
+            Set-Service -Name WSearch -StartupType Disabled -ErrorAction Stop
+            Write-Output 'Windows Search indexing disabled'
+            ", "wsearch-off", ct);
+        static Task<int> StartupAppsOffAsync(CancellationToken ct)
+            => ScriptRunner.RunInlinePowerShellAsync(@"
+            $off = [byte[]](3,0,0,0,0,0,0,0,0,0,0,0)
+            $pairs = @(
+                @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Run', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'),
+                @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'),
+                @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32')
+            )
+            foreach ($p in $pairs) {
+                $names = (Get-Item $p[0] -ErrorAction SilentlyContinue).Property
+                if (-not $names) { continue }
+                if (-not (Test-Path $p[1])) { New-Item -Path $p[1] -Force | Out-Null }
+                foreach ($n in $names) {
+                    if ($n -like '*SecurityHealth*') { continue }
+                    New-ItemProperty -Path $p[1] -Name $n -Value $off -PropertyType Binary -Force | Out-Null
+                    Write-Output ""Startup disabled: $n""
+                }
+            }
+            $folders = @(""$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"", ""$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"")
+            $approved = @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder')
+            for ($i = 0; $i -lt 2; $i++) {
+                $items = Get-ChildItem $folders[$i] -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne 'desktop.ini' }
+                if (-not $items) { continue }
+                if (-not (Test-Path $approved[$i])) { New-Item -Path $approved[$i] -Force | Out-Null }
+                foreach ($f in $items) {
+                    New-ItemProperty -Path $approved[$i] -Name $f.Name -Value $off -PropertyType Binary -Force | Out-Null
+                    Write-Output ""Startup disabled: $($f.Name)""
+                }
+            }
+            ", "startup-off", ct);
+        static Task<int> DmaRegionEeaAsync(CancellationToken ct)
+            => ScriptRunner.RunInlinePowerShellAsync(@"
+            $eea = @('AT','BE','BG','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GF','GP','GR','HR','HU','IE','IS','IT','LI','LT','LU','LV','MT','MQ','NL','NO','PL','PT','RE','RO','SE','SI','SK','YT')
+            $rp = Join-Path $env:SystemRoot 'System32\IntegratedServicesRegionPolicySet.json'
+            try {
+                $edge = (Get-Content $rp -Raw | ConvertFrom-Json).policies | Where-Object { $_.'$comment' -eq 'Edge is uninstallable.' }
+                if ($edge.conditions.region.enabled) { $eea = @($edge.conditions.region.enabled) }
+            } catch { }
+            $iso = (Get-ItemProperty 'HKCU:\Control Panel\International\Geo' -ErrorAction SilentlyContinue).Name
+            if ($eea -notcontains $iso) {
+                Set-WinHomeLocation -GeoId 68
+                Write-Output ""Country or region $iso is outside the EEA, set to Ireland""
+            } else { Write-Output ""Country or region $iso is in the EEA, kept"" }
+            $k = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion'
+            function Test-RegionGone { $null -eq (Get-ItemProperty -Path $k -Name 'DeviceRegion' -ErrorAction SilentlyContinue) }
+            Remove-ItemProperty -Path $k -Name 'DeviceRegion' -Force -ErrorAction SilentlyContinue
+            if (-not (Test-RegionGone)) {
+                Write-Output 'Admin delete refused, retrying as TrustedInstaller'
+                $code = ""Remove-ItemProperty -Path '$k' -Name 'DeviceRegion' -Force""
+                $b = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($code))
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+                $def = (Get-CimInstance -ClassName Win32_Service -Filter ""Name='TrustedInstaller'"").PathName
+                if ([string]::IsNullOrWhiteSpace($def) -or $def -notlike '*TrustedInstaller.exe*') { $def = ""$env:SystemRoot\servicing\TrustedInstaller.exe"" }
+                sc.exe config TrustedInstaller binPath= ""cmd.exe /c PowerShell.exe -encodedcommand $b"" | Out-Null
+                sc.exe start TrustedInstaller | Out-Null
+                Start-Sleep -Seconds 3
+                sc.exe config TrustedInstaller binpath= ""`""$def`"""" | Out-Null
+                try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
+            }
+            if (Test-RegionGone) { Write-Output 'DeviceRegion deleted, Windows recreates it from Country or region at next restart' }
+            else { Write-Output 'Could not delete DeviceRegion'; exit 1 }
+            ", "dma-eea", ct);
+        static Task<int> NvidiaOptimizeAsync(CancellationToken ct)
+        {
+            System.Environment.SetEnvironmentVariable("OB_ASSETS", System.IO.Path.Combine(ScriptRunner.AssetsDir, "Nvidia"));
+            const string script = @"
+            $gpu = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'NVIDIA' }
+            if (-not $gpu) { Write-Output 'No NVIDIA GPU detected, skipping'; exit 0 }
+            $exe = Join-Path $env:OB_ASSETS 'nvidiaProfileInspector.exe'
+            $nip = Join-Path $env:OB_ASSETS 'sparklenvidia.nip'
+            if (-not (Test-Path $exe) -or -not (Test-Path $nip)) { Write-Output 'NVIDIA Profile Inspector assets missing'; exit 1 }
+            $p = Start-Process -FilePath $exe -ArgumentList ""-silentImport `""$nip`"""" -WindowStyle Hidden -Wait -PassThru
+            Write-Output ""NVIDIA profile imported (exit $($p.ExitCode))""
+            exit $p.ExitCode
+            ";
+            return ScriptRunner.RunInlinePowerShellAsync(script, "nvidia-nip", ct);
+        }
 
         static Task<int> GamingPerfPackAsync(CancellationToken ct) => Task.Run(() => Reg(
             (HKLM, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", unchecked((int)0xFFFFFFFF)),

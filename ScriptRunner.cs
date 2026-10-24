@@ -25,6 +25,28 @@ namespace OrangBooster
         const string Win11DebloatReleaseApi = "https://api.github.com/repos/Raphire/Win11Debloat/releases/latest";
         const string Win11DebloatMasterZipUrl = "https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip";
         const string PsBaseArgs = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden";
+
+        // OrangBooster ships as x86. Under WOW64 a bare "powershell.exe" resolves to the
+        // 32-bit host, which sees the redirected registry and hides the native HKLM
+        // identity stores. Use the 64-bit host via the Sysnative
+        // alias when we are a 32-bit process on a 64-bit OS.
+        static readonly string PowerShellExe = ResolveNativePowerShell();
+        static string ResolveNativePowerShell()
+        {
+            try
+            {
+                string win = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+                if (!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem)
+                {
+                    string sysnative = Path.Combine(win, "Sysnative", "WindowsPowerShell", "v1.0", "powershell.exe");
+                    if (File.Exists(sysnative)) return sysnative;
+                }
+                string system32 = Path.Combine(win, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+                if (File.Exists(system32)) return system32;
+            }
+            catch { }
+            return "powershell.exe";
+        }
         const string Prelude = "$ProgressPreference='SilentlyContinue';$PSDefaultParameterValues['Start-Process:WindowStyle']='Hidden';";
         static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(5);
         static readonly TimeSpan LongTimeout = TimeSpan.FromMinutes(20);
@@ -197,7 +219,7 @@ namespace OrangBooster
         static Task<int> RunScriptBodyAsync(string body, string tag, string? successMarker, string? workingDir, TimeSpan timeout, CancellationToken ct)
         {
             string path = WriteScript(tag, body);
-            return RunCoreAsync("powershell.exe", $"{PsBaseArgs} -File \"{path}\"", tag, successMarker, workingDir, timeout, ct);
+            return RunCoreAsync(PowerShellExe, $"{PsBaseArgs} -File \"{path}\"", tag, successMarker, workingDir, timeout, ct);
         }
         public static Task<int> RunPowerShellHiddenAsync(string command, string tag = "ps", CancellationToken ct = default)
             => RunScriptBodyAsync(command, tag, null, null, DefaultTimeout, ct);
@@ -350,6 +372,12 @@ namespace OrangBooster
             string path = Path.Combine(AssetsDir, bundledName);
             if (!File.Exists(path)) { Logger.Error($"Bundled script missing: {bundledName}"); return Task.FromResult(-1); }
             return RunPowerShellFileAsync(path, args, tag, null, null, DefaultTimeout, ct);
+        }
+        public static Task<int> RunDegdidAsync(string args, CancellationToken ct = default)
+        {
+            string path = Path.Combine(AssetsDir, "degdid.ps1");
+            if (!File.Exists(path)) { Logger.Error("Bundled script missing: degdid.ps1"); return Task.FromResult(-1); }
+            return RunPowerShellFileAsync(path, args, "degdid", null, null, LongTimeout, ct);
         }
         static string Truncate(string s, int n) => s.Length <= n ? s : s.Substring(0, n) + "…";
 }   }

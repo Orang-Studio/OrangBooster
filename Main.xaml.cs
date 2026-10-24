@@ -10,12 +10,15 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Media.Core;
+using Windows.Media.Playback;
 namespace OrangBooster
 {
     public sealed partial class MainWindow : Window
     {
         public ObservableCollection<AppItem> FilteredApps { get; } = new();
         public ObservableCollection<BoosterCard> BoosterCards { get; } = new();
+        public ObservableCollection<AppxItem> FilteredAppx { get; } = new();
         private readonly List<AppItem> _allApps = new();
         private readonly List<BoosterCard> _allBoosterCards = new();
         private bool _appsLoaded;
@@ -49,6 +52,7 @@ namespace OrangBooster
             foreach (var c in _allBoosterCards) BoosterCards.Add(c);
             Logger.Info($"Loaded {BoosterCards.Count} Booster cards");
             _ = LoadAppsAsync();
+            _ = LoadAppxAsync();
             try { LogPathText.Text = Logger.LogFile; } catch { }
             Activated += MainWindow_Activated;
         }
@@ -56,40 +60,28 @@ namespace OrangBooster
         {
             if (_warningShown) return;
             _warningShown = true;
+            try { await PlayIntroAsync(); } catch (Exception ex) { Logger.Error("Intro video", ex); IntroOverlay.Visibility = Visibility.Collapsed; }
             await Task.Delay(300);
             try { await ShowStartupWarningAsync(); } catch (Exception ex) { Debug.WriteLine($"Warning: {ex.Message}"); }
         }
-        private static bool IsWindows11()
+        private TaskCompletionSource? _introDone;
+        private async Task PlayIntroAsync()
         {
-            try
-            {
-                using var k = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
-                if (k?.GetValue("CurrentBuildNumber") is string b && int.TryParse(b, out int build))
-                    return build >= 22000;
-            }
-            catch { }
-            return true;
+            string path = Path.Combine(AppContext.BaseDirectory, "Assets", "intro.mp4");
+            if (!File.Exists(path)) { IntroOverlay.Visibility = Visibility.Collapsed; return; }
+            using var player = new MediaPlayer { Source = MediaSource.CreateFromUri(new Uri(path)) };
+            _introDone = new TaskCompletionSource();
+            player.MediaEnded += (_, __) => _introDone.TrySetResult();
+            player.MediaFailed += (_, e) => { Logger.Warn($"Intro video failed: {e.ErrorMessage}"); _introDone.TrySetResult(); };
+            IntroPlayer.SetMediaPlayer(player);
+            player.Play();
+            await _introDone.Task;
+            IntroOverlay.Visibility = Visibility.Collapsed;
+            IntroPlayer.SetMediaPlayer(null);
         }
+        private void IntroOverlay_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e) => _introDone?.TrySetResult();
         private async Task ShowStartupWarningAsync()
         {
-            if (!IsWindows11())
-            {
-                var block = new ContentDialog
-                {
-                    Title = "Windows 11 required",
-                    Content = new TextBlock
-                    {
-                        TextWrapping = TextWrapping.Wrap,
-                        Text = "OrangBooster only supports Windows 11. This machine is running Windows 10, so the app will now close.",
-                    },
-                    PrimaryButtonText = "Close",
-                    DefaultButton = ContentDialogButton.Primary,
-                    XamlRoot = ((FrameworkElement)Content).XamlRoot,
-                };
-                await block.ShowAsync();
-                Application.Current.Exit();
-                return;
-            }
 
             var content = new TextBlock
             {
@@ -154,6 +146,49 @@ namespace OrangBooster
         }
         private static string GetString(JsonElement el, string name)
             => el.TryGetProperty(name, out var v) ? v.GetString() ?? string.Empty : string.Empty;
+        private async Task LoadAppxAsync()
+        {
+            try
+            {
+                string path = Path.Combine(AppContext.BaseDirectory, "Assets", "appx.json");
+                string json = await File.ReadAllTextAsync(path);
+                var parsed = await Task.Run(() => ParseAppx(json));
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    AppxCatalog.Items.Clear();
+                    AppxCatalog.Items.AddRange(parsed);
+                    FilteredAppx.Clear();
+                    foreach (var a in AppxCatalog.Items) FilteredAppx.Add(a);
+                });
+            }
+            catch (Exception ex) { Debug.WriteLine($"LoadAppx: {ex.Message}"); }
+        }
+        private static List<AppxItem> ParseAppx(string json)
+        {
+            var list = new List<AppxItem>();
+            using var doc = JsonDocument.Parse(json);
+            foreach (var prop in doc.RootElement.EnumerateObject())
+            {
+                var el = prop.Value;
+                list.Add(new AppxItem
+                {
+                    Id = prop.Name,
+                    Name = GetString(el, "content"),
+                    Category = GetString(el, "category"),
+                    Description = GetString(el, "description"),
+                    PackageId = GetString(el, "packageId"),
+                });
+            }
+            return list.OrderBy(a => a.Category, StringComparer.OrdinalIgnoreCase).ThenBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+        private void AppxSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var a in AppxCatalog.Items) a.Selected = true;
+        }
+        private void AppxSelectNone_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var a in AppxCatalog.Items) a.Selected = false;
+        }
         private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             if (args.IsSettingsSelected) SwitchToPage("Settings");
@@ -331,8 +366,10 @@ namespace OrangBooster
             if (DebloatCtt.IsChecked == true) jobs.Add(DebloaterId.CttTasks);
             if (DebloatRaphi.IsChecked == true) jobs.Add(DebloaterId.RaphiDebloat);
             if (DebloatApps.IsChecked == true) jobs.Add(DebloaterId.AppUninstaller);
+            if (DebloatAppxSelected.IsChecked == true) jobs.Add(DebloaterId.AppxSelected);
             if (DebloatEdge.IsChecked == true) jobs.Add(DebloaterId.EdgeRemover);
             if (DebloatOb.IsChecked == true) jobs.Add(DebloaterId.OrangBoosterTasks);
+            if (DebloatGdid.IsChecked == true) jobs.Add(DebloaterId.GdidRemoval);
             if (jobs.Count == 0) { SetDebloaterStatus("Nothing selected."); return; }
             await ExecuteDebloaterJobsAsync(jobs);
         }
@@ -341,17 +378,21 @@ namespace OrangBooster
             DebloatCtt.IsChecked = true;
             DebloatRaphi.IsChecked = true;
             DebloatApps.IsChecked = true;
+            DebloatAppxSelected.IsChecked = true;
             DebloatEdge.IsChecked = true;
             DebloatOb.IsChecked = true;
+            DebloatGdid.IsChecked = true;
             var jobs = new List<DebloaterId>
             {
                 DebloaterId.OrangBoosterTasks,
                 DebloaterId.RaphiDebloat,
                 DebloaterId.CttTasks,
                 DebloaterId.AppUninstaller,
+                DebloaterId.AppxSelected,
                 DebloaterId.EdgeRemover,
+                DebloaterId.GdidRemoval,
             };
-            Logger.Info("Nuclear Debloat triggered - running all five jobs sequentially");
+            Logger.Info("Nuclear Debloat triggered - running all seven jobs sequentially");
             await ExecuteDebloaterJobsAsync(jobs);
         }
         private async Task ExecuteDebloaterJobsAsync(List<DebloaterId> jobs)
@@ -398,16 +439,20 @@ namespace OrangBooster
             DebloatCtt.IsChecked = true;
             DebloatRaphi.IsChecked = true;
             DebloatApps.IsChecked = true;
+            DebloatAppxSelected.IsChecked = false;
             DebloatEdge.IsChecked = false;
             DebloatOb.IsChecked = true;
+            DebloatGdid.IsChecked = false;
         }
         private void DebloaterSelectAll_Click(object sender, RoutedEventArgs e)
         {
             DebloatCtt.IsChecked = true;
             DebloatRaphi.IsChecked = true;
             DebloatApps.IsChecked = true;
+            DebloatAppxSelected.IsChecked = true;
             DebloatEdge.IsChecked = true;
             DebloatOb.IsChecked = true;
+            DebloatGdid.IsChecked = true;
         }
         private async Task RunBoosterStatusAsync(string msg, Func<Task> work)
         {

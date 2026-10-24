@@ -1,6 +1,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Windows.UI;
 
 namespace OrangBooster
@@ -26,6 +28,29 @@ namespace OrangBooster
         public Visibility FossVisibility => Foss ? Visibility.Visible : Visibility.Collapsed;
         public Visibility ProprietaryVisibility => Foss ? Visibility.Collapsed : Visibility.Visible;
         public event PropertyChangedEventHandler? PropertyChanged;
+    }
+
+    public class AppxItem : INotifyPropertyChanged
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string PackageId { get; set; } = "";
+        private bool _selected;
+        public bool Selected
+        {
+            get => _selected;
+            set { if (_selected == value) return; _selected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Selected))); }
+        }
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
+
+    public static class AppxCatalog
+    {
+        public static readonly List<AppxItem> Items = new();
+        public static string[] SelectedIds()
+            => Items.Where(a => a.Selected).Select(a => a.PackageId).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToArray();
     }
 
     public class BoosterCard : INotifyPropertyChanged

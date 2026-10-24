@@ -9,13 +9,37 @@ namespace OrangBooster
     {
         [DllImport("kernel32.dll")] static extern bool AttachConsole(int dwProcessId);
         [DllImport("kernel32.dll")] static extern bool AllocConsole();
+        [DllImport("kernel32.dll")] static extern IntPtr GetStdHandle(int nStdHandle);
+        [DllImport("kernel32.dll")] static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+        [DllImport("kernel32.dll")] static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
         const int ATTACH_PARENT_PROCESS = -1;
+        const int STD_INPUT_HANDLE = -10;
+        const uint ENABLE_QUICK_EDIT_MODE = 0x0040;
+        const uint ENABLE_EXTENDED_FLAGS = 0x0080;
+
+        // QuickEdit is on by default for a freshly allocated console; a stray
+        // click then puts the console in mark/select mode and blocks the next
+        // Console.Write, freezing the whole run. Turn it off so output never stalls.
+        static void DisableConsoleQuickEdit()
+        {
+            try
+            {
+                IntPtr h = GetStdHandle(STD_INPUT_HANDLE);
+                if (h == IntPtr.Zero || h == new IntPtr(-1)) return;
+                if (!GetConsoleMode(h, out uint mode)) return;
+                mode = (mode & ~ENABLE_QUICK_EDIT_MODE) | ENABLE_EXTENDED_FLAGS;
+                SetConsoleMode(h, mode);
+            }
+            catch { }
+        }
         static readonly (string key, DebloaterId id, string desc)[] Categories =
         {
             ("ctt",   DebloaterId.CttTasks,         "Chris Titus winutil tweaks"),
             ("raphi", DebloaterId.RaphiDebloat,     "Win11Debloat (Raphire) pass"),
             ("apps",  DebloaterId.AppUninstaller,   "Remove bloatware appx packages"),
+            ("appx",  DebloaterId.AppxSelected,     "Remove selected appx packages (ids after flag, else UI selection)"),
             ("edge",  DebloaterId.EdgeRemover,      "Remove Microsoft Edge"),
+            ("gdid",  DebloaterId.GdidRemoval,      "Microsoft GDID removal (degdid, silent)"),
             ("ob",    DebloaterId.OrangBoosterTasks,"OrangBooster tasks pack (privacy, services, pins, etc.)"),
         };
         public static bool IsCliInvocation(string[] args) =>
@@ -39,6 +63,7 @@ namespace OrangBooster
         public static async Task<int> RunAsync(string[] args)
         {
             if (!AttachConsole(ATTACH_PARENT_PROCESS)) AllocConsole();
+            DisableConsoleQuickEdit();
 
             if (IsInteractive(args)) return await CliMenu.RunAsync();
 
@@ -98,11 +123,24 @@ namespace OrangBooster
             foreach (var cat in cats)
             {
                 var match = Categories.FirstOrDefault(c => c.key == cat);
-                if (match.key == null) { Out($"Unknown debloat category '{cat}'. Use --list."); worst = 1; continue; }
+                if (match.key == null)
+                {
+                    if (cats.Contains("appx")) continue;
+                    Out($"Unknown debloat category '{cat}'. Use --list."); worst = 1; continue;
+                }
+                if (match.id == DebloaterId.AppxSelected)
+                {
+                    var ids = cats.Where(c => Categories.All(k => k.key != c)).ToArray();
+                    Out($"-> debloat appx: {(ids.Length > 0 ? string.Join(", ", ids) : "UI selection")}");
+                    int r = await EmbeddedActions.RunAppxSelectedAsync(ids.Length > 0 ? ids : AppxCatalog.SelectedIds());
+                    if (r != 0) worst = r;
+                    Out($"   done (code {r})");
+                    continue;
+                }
                 Out($"-> debloat {match.key}: {match.desc}");
-                int r = await DebloaterTasks.RunAsync(match.id);
-                if (r != 0) worst = r;
-                Out($"   done (code {r})");
+                int rr = await DebloaterTasks.RunAsync(match.id);
+                if (rr != 0) worst = rr;
+                Out($"   done (code {rr})");
             }
             return worst;
         }
