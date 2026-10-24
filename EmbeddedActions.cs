@@ -1609,9 +1609,9 @@ Write-Output 'Store unpin (interactive user) done'
                 try { Stop-Service -Name TrustedInstaller -Force -ErrorAction Stop } catch { taskkill /im trustedinstaller.exe /f 2>$null | Out-Null }
             }
             $ids = @('MicrosoftWindows.Client.AIX','MicrosoftWindows.Client.CoPilot','Microsoft.Windows.Ai.Copilot.Provider','Microsoft.Copilot','Microsoft.MicrosoftOfficeHub','MicrosoftWindows.Client.CoreAI','Microsoft.Edge.GameAssist','Microsoft.Office.ActionsServer','aimgr','Microsoft.WritingAssistant','Clipchamp.Clipchamp','Microsoft.AIFabric.CBS*','MicrosoftWindows.*.Voiess','MicrosoftWindows.*.Speion','MicrosoftWindows.*.Livtop','MicrosoftWindows.*.Filons','WindowsWorkload.Data.Analysis*','WindowsWorkload.Manager.*','WindowsWorkload.PSOnnxRuntime*','WindowsWorkload.PSTokenizer*','WindowsWorkload.QueryBlockList.*','WindowsWorkload.QueryProcessor*','WindowsWorkload.SemanticText*','WindowsWorkload.Data.ContentExtraction*','WindowsWorkload.ScrRegDetection*','WindowsWorkload.TextRecognition*','WindowsWorkload.Data.ImageSearch*','WindowsWorkload.ImageContentModeration*','WindowsWorkload.ImageSearch*','WindowsWorkload.PSTokenizerShared*','WindowsWorkload.ImageTextSearch*','WindowsWorkload.SettingsModel*','WindowsWorkload.Data.PhiSilica*','WindowsWorkload.EP.Qualcomm*','WindowsWorkload.ImageDescription*','WindowsWorkload.ImageLLMAdapter*','WindowsWorkload.LanguageModel*','WindowsWorkload.SessionManager*','WindowsWorkload.TextContentModeration*','WindowsWorkload.WinMLShared*','WindowsWorkload.Data.SettingsModel*','MicrosoftCorporationII.WinML.Qualcomm*','Microsoft.Ink.Handwriting*','WindowsWorkload.EP.Intel.OpenVINO*','WindowsWorkload.OnnxRuntime*')
-            $joined = $ids -join ','
+            $idsFile = Join-Path $env:OB_TEMP 'obaiids.txt'
             $tiCode = @'
-$choices = @(Get-Content (Join-Path $env:TEMP 'obaiids.txt') -ErrorAction SilentlyContinue)
+$choices = @(Get-Content 'OB_IDS_FILE' -ErrorAction SilentlyContinue)
 $provisioned = Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
 $installed = Get-AppxPackage -AllUsers -ErrorAction SilentlyContinue
 $store = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
@@ -1642,9 +1642,9 @@ foreach ($choice in $choices) {
     }
 }
 '@
-            $joined | Set-Content (Join-Path $env:TEMP 'obaiids.txt') -Force
-            Invoke-TiCommand $tiCode
-            Remove-Item (Join-Path $env:TEMP 'obaiids.txt') -Force -ErrorAction SilentlyContinue
+            $ids | Set-Content $idsFile -Force
+            Invoke-TiCommand $tiCode.Replace('OB_IDS_FILE', $idsFile)
+            Remove-Item $idsFile -Force -ErrorAction SilentlyContinue
             for ($r = 0; $r -lt 3; $r++) {
                 $left = @(Get-AppxPackage -AllUsers | Where-Object { $n = $_.Name; @($ids | Where-Object { $n -like $_ }).Count -gt 0 })
                 if ($left.Count -eq 0) { break }
@@ -1671,7 +1671,7 @@ foreach ($choice in $choices) {
                 $us = (Get-ItemProperty -Path $un -Name 'UninstallString' -ErrorAction SilentlyContinue).UninstallString
                 if ($us) { Start-Process cmd.exe -ArgumentList ""/c $us"" -WindowStyle Hidden -Wait }
             }
-            $rb = Join-Path $env:TEMP 'obreg1.exe'
+            $rb = Join-Path $env:OB_TEMP 'obreg1.exe'
             Copy-Item (Get-Command reg.exe).Source $rb -Force -ErrorAction SilentlyContinue
             & $rb add 'HKCU\Software\Microsoft\Windows\Shell\BrandedKey' /v 'BrandedKeyChoiceType' /t REG_SZ /d 'Search' /f 2>$null | Out-Null
             & $rb add 'HKCU\Software\Microsoft\Windows\Shell\BrandedKey' /v 'AppAumid' /t REG_SZ /d ' ' /f 2>$null | Out-Null
@@ -1801,7 +1801,7 @@ foreach ($choice in $choices) {
         {
             const string script = @"
             $ErrorActionPreference='SilentlyContinue'
-            $tempDir = Join-Path $env:TEMP 'ob-aiuwp\'
+            $tempDir = Join-Path $env:OB_TEMP 'ob-aiuwp\'
             New-Item $tempDir -ItemType Directory -Force | Out-Null
             Write-Output 'AI UWP settings start'
             function Set-UwpAppRegistryEntry {
